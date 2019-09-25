@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Login</title>
+  </head>
+  <% include ./partials/head %>
+  <% include ./partials/scripts %>
+	<div class="alert alert-danger alert-dismissible fade show" role="alert">
+	  <strong>Login Failed!</strong>
+	  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+	    <span aria-hidden="true">&times;</span>
+	  </button>
+	</div>
+	<div class="login-form">
+	    <form>
+	        <h2 class="text-center">Log in</h2>
+	        <div class="form-group">
+	            <input type="text" id="username" class="form-control" placeholder="Username" required="required">
+	        </div>
+	        <div class="form-group">
+	            <input type="password" id="password" class="form-control" placeholder="Password" required="required">
+	        </div>
+	        <div class="form-group">
+	            <button type="submit" class="btn btn-primary btn-block" id="login-btn">Log in</button>
+	        </div>
+	        <!--<div class="clearfix">
+	            <label class="pull-left checkbox-inline"><input type="checkbox"> Remember me</label>
+	            <a href="#" class="pull-right">Forgot Password?</a>
+	        </div>-->
+	    </form>
+	    <!--<p class="text-center"><a href="#">Create an Account</a></p>-->
+	</div>
+</html>

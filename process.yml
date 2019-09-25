@@ -1,0 +1,5 @@
+apps:
+  - script   : 'app.js'
+    name     : 'auth-service'
+    error_file : "/tmp/pm2/logs/authservice_error.log"
+    out_file : "/tmp/pm2/authservice_out.log"
