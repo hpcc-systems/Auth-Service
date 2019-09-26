@@ -1,4 +1,7 @@
 # Auth-Service
+
+A JWT token based authentication service. Tokens are signed and verified via key pairs. This service provides a UI to manage the users as well as API's to generate/verify tokens.   
+
 1. Clone the repository
 2. Create a Private/Public key pairs and place it under keys directory
 3. Rename .env.sample to .env.
