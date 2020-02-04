@@ -5,14 +5,6 @@ module.exports = {
     return queryInterface.createTable(
       'User_Roles',
       {
-        createdAt: {
-          allowNull: false,
-          type: Sequelize.DATE,
-        },
-        updatedAt: {
-          allowNull: false,
-          type: Sequelize.DATE,
-        },
         userId: {
           type: Sequelize.INTEGER,
           primaryKey: true
@@ -21,6 +13,17 @@ module.exports = {
           type: Sequelize.INTEGER,
           primaryKey: true
         },
+        permissions: {
+          type: Sequelize.TEXT
+        },
+        createdAt: {
+          allowNull: false,
+          type: Sequelize.DATE,
+        },
+        updatedAt: {
+          allowNull: false,
+          type: Sequelize.DATE,
+        }
       }
     );
   },

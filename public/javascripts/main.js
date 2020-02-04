@@ -18,7 +18,8 @@ $(document).ready(() => {
                 "email": (element.email != null ? element.email : ""),
                 "organization" : (element.organization != null ? element.organization : ""),
                 "role" : (element.Roles[0] != null ? element.Roles[0].name  : ""),
-                "roleId" : (element.Roles[0] != null ? element.Roles[0].id  : "")
+                "roleId" : (element.Roles[0] != null ? element.Roles[0].id  : ""),
+                "permissions": (element.Roles[0] != null ? element.Roles[0].User_Roles.permissions  : "")
               });
           });
           callback({aaData:users});
@@ -34,6 +35,7 @@ $(document).ready(() => {
       { title: "Organization", data: "organization", width:'340px' },
       { title: "Role", data: "role", width:'240px' },
       { title: "RoleId", data: "roleId", width:'240px', visible: false },
+      { title: "Permissions", data: "permissions", width:'240px', visible: false },
       { title: "", data: "", width:'10px',
           render: function ( data, type, full, meta ) {
             return '<span class="edit"><i class="fa fa-pencil"></i></span>';
@@ -57,7 +59,7 @@ $(document).ready(() => {
     var cell = dt.cell( this );
     var data = dt.row( $(this).parents('tr') ).data();
     //edit
-    if(cell.index().column == 8) {
+    if(cell.index().column == 9) {
       $('#inputFirstName').val(data["firstName"]);
       $('#inputLastName').val(data["lastName"]);
       $('#inputEmail').val(data["email"]);
@@ -65,6 +67,8 @@ $(document).ready(() => {
       $('#inputUserName').val(data["username"]);
 
       fillRoles(data["roleId"]);
+      console.log(data["permissions"]);
+      loadPermissions(data["permissions"]);
 
       $('#create-usr-model #create_user').html('Update User');
 
@@ -72,13 +76,13 @@ $(document).ready(() => {
     }
 
     //delete
-    if(cell.index().column == 9) {
+    if(cell.index().column == 10) {
       $('#confirm-delete #userIdToDelete').val(data["id"]);
       $('#confirm-delete').modal();
     }
 
     //change password
-    if(cell.index().column == 10) {
+    if(cell.index().column == 11) {
       $('#chg-pwd-model #username').val(data["username"]);
       $('#chg-pwd-model').modal();
     }
@@ -88,6 +92,7 @@ $(document).ready(() => {
   //Add User button
   $('.add-user-btn').on('click', () => {
     fillRoles();
+    loadPermissions();
 
     $('#create-usr-model #create_user').html('Create User');
 
@@ -136,7 +141,8 @@ $(document).ready(() => {
       "organization": $('#inputOrganization').val(),
       "username": $('#inputUserName').val(),
       "password": $('#inputPassword').val(),
-      "role": $('#inputRole').val()
+      "role": $('#inputRole').val(),
+      "permissions": $('#permissions').val().join(',')
     },
     function(data, status){
       $('#create-usr-model').modal('hide');
@@ -171,6 +177,17 @@ function fillRoles(selectedValue) {
     if(selectedValue) {
       roles.val(selectedValue);
     }
+  });
+}
+
+function loadPermissions(selectedValue) {
+  $.get("/users/permissions", function( data ) {
+    var permissions = $("#permissions");
+    permissions.empty();
+    $.each(data, function() {
+        permissions.append($("<option />").val(this.id).text(this.name));
+    });
+    permissions.val(selectedValue.split(','));
   });
 }
 

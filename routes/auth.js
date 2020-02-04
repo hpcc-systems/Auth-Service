@@ -8,6 +8,7 @@ let models = require('../models');
 let User = models.User;
 let Role = models.Role;
 let UserRoles = models.User_Roles;
+let Permissions = models.Permission;
 let Audit = models.Audit;
 const jwksClient = require('jwks-rsa');
 
@@ -30,30 +31,35 @@ router.post('/login', function(req, res, next) {
     }
     // PRIVATE
   	var privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/jwt_key'), 'utf8');
-  	// PAYLOAD
-  	var payload = {
-  	 firstName: user.firstName,
-  	 lastName: user.lastName,
-  	 username: user.userName,
-  	 email: user.email,
-  	 organization: user.organization,
-  	 role: user.Roles[0].name
-  	};
+  	Permissions.findAll({where: {id:user.Roles[0].User_Roles.permissions.split(',')}, attributes: ['id','name'], raw: true}).then(permissions => {
+      // PAYLOAD
+      var payload = {
+       id: user.id,
+       firstName: user.firstName,
+       lastName: user.lastName,
+       username: user.userName,
+       email: user.email,
+       organization: user.organization,
+       role: user.Roles[0].name,
+       permissions: permissions.map(item => item.name)
+      };
 
-  	// SIGNING OPTIONS
-  	var signOptions = {
-  	 expiresIn:  "12h",
-  	 algorithm:  "RS256"
-  	};
-    var token = jwt.sign(payload, privateKey, signOptions);
+      // SIGNING OPTIONS
+      var signOptions = {
+       expiresIn:  "12h",
+       algorithm:  "RS256"
+      };
+      var token = jwt.sign(payload, privateKey, signOptions);
 
-    Audit.create({username:req.body.username, action:'login'}).then(audit => {
-      console.log('audit created for login:'+ req.body.username);
-    });
-    res.cookie('auth',token);
-    res.status(200).send({ auth: true, accessToken: token });
+      Audit.create({username:req.body.username, action:'login'}).then(audit => {
+        console.log('audit created for login:'+ req.body.username);
+      });
+      res.cookie('auth',token);
+      res.status(200).send({ auth: true, accessToken: token });
+    })
 
   }).catch(err => {
+    console.log(err);
     res.status(500).send('Error -> ' + err);
   });
 });

@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 let models = require('../models');
 let User = models.User;
 let Role = models.Role;
+let Permission = models.Permission;
 let UserRoles = models.User_Roles;
 /* GET users listing. */
 router.get('/all', function(req, res, next) {
@@ -26,6 +27,16 @@ router.get('/roles', function(req, res, next) {
 	    console.log(err);
 	});
 });
+
+router.get('/permissions', function(req, res, next) {
+    Permission.findAll().then(function(permissions) {
+        res.json(permissions);
+    })
+    .catch(function(err) {
+        console.log(err);
+    });
+});
+
 
 router.post('/delete', (req, res) => {
     console.log("[delete/read.js] - delete job = " + req.body.id);
@@ -68,18 +79,34 @@ router.post('/user', (req, res) => {
                 		user.removeRole(user.Roles[0]);
                 		//get the new role and add it to user
                 		Role.findOne({where:{"id":req.body.role}}).then(function(role) {
-			            	user.addRole(role);
+			            	user.addRole(role).then((roleAdded) => {
+
+                            });
 			            })
                 	}
+                    if(user.Roles[0].permissions != req.body.permissions) {
+                      console.log(user.id + ' --- '+user.Roles[0].id)
+                      UserRoles.findOne({where: {"userId": user.id, "roleId":user.Roles[0].id}}).then((userRole) => {
+                          userRole.update({"permissions":req.body.permissions}).then((userPermission) => {
+                            res.json({"result":"success"});
+                          });
+                      });
+                    }
                 });
 
             } else {
             	//new user
 	            Role.findOne({where:{"id":req.body.role}}).then(function(role) {
-	            	result[0].addRole(role);
+                    result[0].addRole(role).then((roleAdded) => {
+                        UserRoles.findOne({where: {"userId": result[0].id, "roleId":role.id}}).then((userRole) => {
+                            userRole.update({"permissions":req.body.permissions}).then((userPermission) => {
+                                res.json({"result":"success"});
+                            });
+                        });
+                    });
 	            })
             }
-			res.json({"result":"success"});
+
         }), function(err) {
             return res.status(500).send(err);
         }
