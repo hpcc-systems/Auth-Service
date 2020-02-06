@@ -13,9 +13,6 @@ module.exports = {
           type: Sequelize.INTEGER,
           primaryKey: true
         },
-        permissions: {
-          type: Sequelize.TEXT
-        },
         createdAt: {
           allowNull: false,
           type: Sequelize.DATE,
