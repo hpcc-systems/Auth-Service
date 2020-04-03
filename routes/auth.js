@@ -37,7 +37,7 @@ router.post('/login', function(req, res, next) {
        id: user.id,
        firstName: user.firstName,
        lastName: user.lastName,
-       username: user.userName,
+       username: user.username,
        email: user.email,
        organization: user.organization,
        role: user.Roles[0].name,
@@ -46,7 +46,7 @@ router.post('/login', function(req, res, next) {
 
       // SIGNING OPTIONS
       var signOptions = {
-       expiresIn:  "12h",
+       expiresIn:  "24h",
        algorithm:  "RS256"
       };
       var token = jwt.sign(payload, privateKey, signOptions);
@@ -78,7 +78,7 @@ router.get('/getKey', function(req, res, next) {
 router.post('/verify', function(req, res, next) {
   try {
     var verifyOptions = {
-     expiresIn:  "12h",
+     expiresIn:  "24h",
      algorithms:  "RS256"
     };
 
