@@ -65,9 +65,9 @@ $(document).ready(() => {
       $('#inputEmail').val(data["email"]);
       $('#inputOrganization').val(data["organization"]);
       $('#inputUserName').val(data["username"]);
+      $("#inputUserName").prop('disabled', true);
 
       fillRoles(data["roleId"]);
-      console.log(data["permissions"]);
       loadPermissions(data["permissions"]);
 
       $('#create-usr-model #create_user').html('Update User');
@@ -95,7 +95,7 @@ $(document).ready(() => {
     loadPermissions();
 
     $('#create-usr-model #create_user').html('Create User');
-
+    $("#inputUserName").prop('disabled', false);
     $('#create-usr-model').modal();
   });
 
