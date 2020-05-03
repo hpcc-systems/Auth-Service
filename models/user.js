@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {});
   User.associate = function(models) {
     models.User.belongsToMany(models.Role, { through: 'User_Roles', foreignKey: 'userId', onDelete: 'CASCADE'});
+    //models.User.belongsToMany(models.Role);
   };
   return User;
 };

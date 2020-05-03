@@ -1,16 +1,18 @@
 var express = require('express');
 var router = express.Router();
 const bcrypt = require('bcryptjs');
+let Sequelize = require('sequelize');
 let models = require('../models');
 let User = models.User;
 let Role = models.Role;
 let Permission = models.Permission;
 let UserRoles = models.User_Roles;
+const Op = Sequelize.Op;
 /* GET users listing. */
 router.get('/all', function(req, res, next) {
   	User.findAll({
-  		attributes: { exclude: ["password"] },
-  		include: [{model:Role}]
+  		attributes: { exclude: ["password", "createdAt", "updatedAt"] },
+  		include:[{model: models.Role, attributes:{ exclude: ["createdAt", "updatedAt"]}, include: [{model:models.Permission, attributes:{ exclude: ["createdAt", "updatedAt"]}}, {model:models.Application, attributes:{ exclude: ["createdAt", "updatedAt"]}}] }]
   	}).then(function(users) {
 	    res.json(users);
 	})
@@ -58,54 +60,46 @@ router.post('/user', (req, res) => {
 	        hash = bcrypt.hashSync(req.body.password, 10);
     	}
         User.findOrCreate({
-            where: {username: req.body.username},
-            defaults: {
-            	"firstName": req.body.firstName,
-				"lastName": req.body.lastName,
-				"username": req.body.username,
-				"password": hash,
-				"email": req.body.email,
-				"organization": req.body.organization
-            }
+          where: {username: req.body.username},
+          defaults: {
+          	"firstName": req.body.firstName,
+      			"lastName": req.body.lastName,
+      			"username": req.body.username,
+      			"password": hash,
+      			"email": req.body.email,
+      			"organization": req.body.organization
+          }
         }).then(async function(result) {
-            //update scenario
-            if(!result[1]) {
-                fieldsToUpdate = {"firstName"  : req.body.firstName, "lastName" : req.body.lastName, "password": hash, "email" : req.body.email, "organization" : req.body.organization};
-                User.update(fieldsToUpdate, {where:{username:req.body.username}}).then(function(updateResult){
-                	return User.findOne({where: {username: req.body.username}, include: [{model:Role}]})
-                }).then(function(user) {
-                	//role changed?
-                	if(user.Roles[0].id != req.body.role) {
-                		user.removeRole(user.Roles[0]);
-                		//get the new role and add it to user
-                		Role.findOne({where:{"id":req.body.role}}).then(function(role) {
-			            	user.addRole(role).then((roleAdded) => {
+          //update scenario
+          if(!result[1]) {
+            fieldsToUpdate = {"firstName"  : req.body.firstName, "lastName" : req.body.lastName, "password": hash, "email" : req.body.email, "organization" : req.body.organization};
+            User.update(fieldsToUpdate, {where:{username:req.body.username}}).then(function(updateResult){
+            	return User.findOne({where: {username: req.body.username}, include: [{model:Role}]})
+            }).then(function(user) {
+            	//role changed?
+            	user.Roles.forEach((currentRole) => {
+            		user.removeRole(currentRole);
+            	});
+              //get the new role and add it to user
+              Role.findAll({where: {"id":{[Op.in]:req.body.role.split(',')}}}).then(function(roles) {
+                roles.forEach((role) => {
+                  result[0].addRole(role).then((roleAdded) => {
 
-                            });
-			            })
-                	}
-                    if(user.Roles[0].permissions != req.body.permissions) {
-                      console.log(user.id + ' --- '+user.Roles[0].id)
-                      UserRoles.findOne({where: {"userId": user.id, "roleId":user.Roles[0].id}}).then((userRole) => {
-                          userRole.update({"permissions":req.body.permissions}).then((userPermission) => {
-                            res.json({"result":"success"});
-                          });
-                      });
-                    }
+                  });
                 });
-
-            } else {
-            	//new user
-	            Role.findOne({where:{"id":req.body.role}}).then(function(role) {
-                    result[0].addRole(role).then((roleAdded) => {
-                        UserRoles.findOne({where: {"userId": result[0].id, "roleId":role.id}}).then((userRole) => {
-                            userRole.update({"permissions":req.body.permissions}).then((userPermission) => {
-                                res.json({"result":"success"});
-                            });
-                        });
-                    });
-	            })
-            }
+                res.json({"result":"success"});
+              })                    
+            });
+          } else {
+          	//new user
+            Role.findAll({where: {"id":{[Op.in]:req.body.role.split(',')}}}).then(function(roles) {
+              roles.forEach((role) => {
+                result[0].addRole(role).then((roleAdded) => {                            
+                });
+              });
+              res.json({"result":"success"});
+            })
+          }
 
         }), function(err) {
             return res.status(500).send(err);

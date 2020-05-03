@@ -121,3 +121,12 @@ body {
 #user_tbl_wrapper .row {
  padding-top:10px;
 }
+
+#add_role {
+	margin-top:23px;
+}
+
+#role_tbl {
+	width:450px !important;
+	height: 200px;
+}

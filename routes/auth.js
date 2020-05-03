@@ -18,8 +18,9 @@ router.post('/login', function(req, res, next) {
     where: {
       username: req.body.username
     },
-    include: [{model:Role}]
+    include:[{model: models.Role, include: [models.Permission] }]
   }).then(user => {
+    console.log(user);
     if (!user) {
       throw new Error('User Not Found.');
     }
@@ -30,8 +31,9 @@ router.post('/login', function(req, res, next) {
       throw new Error("Invalid Password!")
     }
     // PRIVATE
+    console.log(user.Roles);
   	var privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/jwt_key'), 'utf8');
-  	Permissions.findAll({where: {id:user.Roles[0].User_Roles.permissions.split(',')}, attributes: ['id','name'], raw: true}).then(permissions => {
+  	//Permissions.findAll({where: {id:user.Roles[0].permissions}, attributes: ['id','name'], raw: true}).then(permissions => {
       // PAYLOAD
       var payload = {
        id: user.id,
@@ -40,8 +42,8 @@ router.post('/login', function(req, res, next) {
        username: user.username,
        email: user.email,
        organization: user.organization,
-       role: user.Roles[0].name,
-       permissions: permissions.map(item => item.name)
+       role: user.User_Roles,
+       permissions: user.permissions
       };
 
       // SIGNING OPTIONS
@@ -56,7 +58,7 @@ router.post('/login', function(req, res, next) {
       });
       res.cookie('auth',token);
       res.status(200).send({ auth: true, accessToken: token });
-    })
+    //})
 
   }).catch(err => {
     console.log(err);
