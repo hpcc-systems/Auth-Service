@@ -31,7 +31,6 @@ router.post('/login', function(req, res, next) {
       throw new Error("Invalid Password!")
     }
     // PRIVATE
-    console.log(user.Roles);
   	var privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/jwt_key'), 'utf8');
   	//Permissions.findAll({where: {id:user.Roles[0].permissions}, attributes: ['id','name'], raw: true}).then(permissions => {
       // PAYLOAD
@@ -42,8 +41,7 @@ router.post('/login', function(req, res, next) {
        username: user.username,
        email: user.email,
        organization: user.organization,
-       role: user.User_Roles,
-       permissions: user.permissions
+       role: user.Roles
       };
 
       // SIGNING OPTIONS
@@ -51,6 +49,7 @@ router.post('/login', function(req, res, next) {
        expiresIn:  "24h",
        algorithm:  "RS256"
       };
+      console.log('payload: '+JSON.stringify(payload));
       var token = jwt.sign(payload, privateKey, signOptions);
 
       Audit.create({username:req.body.username, action:'login'}).then(audit => {

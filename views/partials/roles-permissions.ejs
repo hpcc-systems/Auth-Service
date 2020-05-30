@@ -1,0 +1,79 @@
+<div class="tab-pane fade" id="roles-info" role="tabpanel" aria-labelledby="v-nav-roles-permission-tab">
+	<div class="button-div float-right">
+		<button type="button" class="btn btn-secondary add-app-btn">Add Application</button>
+	</div>
+
+	<div class="w-100">			
+		<table class="table table-bordered table-striped" id="applications_tbl" style="width:100%">
+		</table>
+	</div>  	
+</div>
+
+<div class="modal fade" id="create-app-modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Create new Application</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="roles-permission-form" id="roles-permission-form">
+        	<input type="hidden" id="appId" value=""/>
+				  <div class="form-row">
+				    <div class="form-group col-md-6">
+				      <label for="appName">Name</label>
+				      <input type="text" class="form-control" id="appName" placeholder="Name">
+				    </div>
+				    <div class="form-group col-md-6">
+				      <label for="description">Description</label>
+				      <input type="textarea" class="form-control" id="description" placeholder="Description">
+				    </div>
+						<div class="form-group col-md-6">
+				      <label for="owner">Owner</label>
+				      <input type="text" class="form-control" id="owner" placeholder="Owner">
+				    </div>
+						<div class="form-group col-md-6">
+				      <label for="email">Email</label>
+				      <input type="text" class="form-control" id="email" placeholder="Email">
+				    </div>				    
+				  </div>			       				    
+				
+					<nav>
+					  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+					    <a class="nav-item nav-link active" id="nav-permissions-tab" data-toggle="tab" href="#nav-permissions" role="tab" aria-controls="nav-home" aria-selected="true">Roles</a>					    
+					  </div>
+					</nav>
+					<div class="tab-content" id="nav-tabContent">
+					  <!--Permissions Tab -->
+					  <div class="tab-pane fade show active" id="nav-permissions" role="tabpanel" aria-labelledby="nav-permissions-tab">
+					  	<div class="form-row pt-2">
+						  	<div class="form-group col-sm-5">
+						      <input type="text" class="form-control" id="role" placeholder="Role name">
+						    </div>					    					    
+							  <div class="form-group col-sm-2">
+									<button type="button" class="btn btn-secondary" id="add_app_role">Add</button>
+							  </div>
+							</div>  
+							<div>
+								<table class="table table-bordered table-striped" id="app_roles_tbl" style="width:100%">
+								</table>
+							</div>    		      				    
+					  </div>
+					  
+
+					</div>
+				</form>
+			</div>		
+			<div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" id="create_app">Create Application</button>
+      </div>		
+    </div>
+    
+    <div id="delete-app-confirm" title="Empty the recycle bin?">
+		  <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 10px 0;"></span>This will delete the Application and its associated Roles and Permissions. Are you sure?</p>
+		</div>
+  </div>
+</div>

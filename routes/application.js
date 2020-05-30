@@ -5,6 +5,8 @@ let models = require('../models');
 let Role = models.Role;
 let Permission = models.Permission;
 let Application = models.Application;
+let Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 
 let findOrCreateRole = async (role, applicationId) => {
 	return new Promise((resolve, reject) => {	
@@ -30,9 +32,9 @@ let findOrCreateRole = async (role, applicationId) => {
 let findOrCreatePermission = async (permission, roleId) => {
 	return new Promise((resolve, reject) => {	
 		Permission.findOrCreate({
-	    where: {name: permission, roleId: roleId},
+	    where: {name: permission.name, roleId: roleId},
 	    defaults: {
-	      "name": permission,
+	      "name": permission.name,
 	      "roleId": roleId
 	    }
 	  }).then(function(result) {
@@ -77,6 +79,7 @@ let removePermissions = async(permissionId, roleId) => {
 
 router.post('/', function(req, res, next) {
 	let appObj = req.body;
+	console.log(appObj);
   Application.create(appObj).then((result) => {
   	console.log(result.get('id'))  	
   	if(appObj.roles) {
@@ -100,29 +103,30 @@ router.post('/', function(req, res, next) {
 
 router.put('/', function(req, res, next) {
 	let appObj = req.body;
+	console.log(appObj);
   Application.update({ 
   	"name": appObj.name,
 	  "description": appObj.description,
 	  "email": appObj.email,
 	  "owner": appObj.owner
 	}, {where:{id:appObj.id}}).then(async (application) => {  	
-  	if(appObj.Roles) {
-  		appObj.Roles.forEach(async (role) => {
+  	if(appObj.roles) {
+  		console.log('roles')
+  		appObj.roles.forEach(async (role) => {
   			//add only new rules and permissions
   			console.log('role.id: '+role.id);
   			if(!role.id) {
   				console.log(application);
 	  			let createRoleResult = await findOrCreateRole(role, appObj.id);
-  				console.log('roleid: '+createRoleResult[0].id);
-	  			if(role.Permissions) {
-			  		role.Permissions.forEach( async (permission) => {
+  				if(role.permissions) {
+			  		role.permissions.forEach( async (permission) => {
 			  			let createPermissionResult = await findOrCreatePermission(permission, createRoleResult[0].id);
 			  		})
 			  	}
 			  } else {
 			  	//only new permissions added
-			  	if(role.Permissions) {
-			  		role.Permissions.forEach( async (permission) => {
+			  	if(role.permissions) {
+			  		role.permissions.forEach( async (permission) => {
 			  			if(!permission.id) {
 			  				let createPermissionResult = await findOrCreatePermission(permission, role.id);
 			  			}
@@ -133,6 +137,7 @@ router.put('/', function(req, res, next) {
   	}
 
   	if(appObj.roles_removed) {
+  		console.log('removing roles')
   		appObj.roles_removed.forEach(async (removedRoles) => {
   			let rolesRemovedResult = await removeRoles(removedRoles, appObj.id)
   		});
@@ -169,7 +174,25 @@ router.get('/', function(req, res, next) {
   }).catch(function(err) {
      console.log("error occured: "+err);
   });
-  
+});
+
+router.delete('/', function(req, res, next) {
+	let appId = req.query.id;
+  Application.destroy({where:{"id":appId}, include:[{model: models.Role, include: [models.Permission] }]}).then((application) => {  	
+  	Role.findAll({where: {"applicationId":appId}}).then((roles) => {
+  		let roleIds = [];
+  		roles.forEach((role) => {  			
+  			roleIds.push(role.id);
+  		})
+  		Permission.destroy({where:{"roleId": {[Op.in]: roleIds}}}).then((permissions)	=> {
+		  	Role.destroy({where: {"applicationId":appId}}).then((roleDestroyed) => {
+		  		res.json(application);
+		  	});
+  		})
+  	})	  
+  }).catch(function(err) {
+     console.log("error occured: "+err);
+  });	    
 });
 
 module.exports = router;

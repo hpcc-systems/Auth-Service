@@ -24,6 +24,14 @@ $(document).ready(() => {
     return (duplicates.length > 0 ? false : true);
   }
 
+  $(".nav-link.users").on("click", (evt) => {
+    console.log('.user clicked')
+  })
+
+  $(".nav-link.roles-permissions").on("click", (evt) => {
+    console.log('.roles-permissions clicked')
+  })
+
   $("#role_tbl tbody").on("click",".delete_role", (evt) => {
     roleTable
       .row( $(evt.target).parents('tr') )
@@ -95,6 +103,8 @@ $(document).ready(() => {
       }
     ]
   });
+
+  $( dt.table().container() ).removeClass( 'form-inline' );    
 
   //datatable actions
   $('#user_tbl').on('click', 'td', function () {

@@ -45,20 +45,20 @@ body {
 }
 .login-form form {
 	margin-bottom: 15px;
-    background: #f7f7f7;
-    box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
-    padding: 30px;
+  background: #f7f7f7;
+  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
+  padding: 30px;
 }
 .login-form h2 {
     margin: 0 0 15px;
 }
 .form-control, .btn {
-    min-height: 38px;
-    border-radius: 2px;
+  min-height: 38px;
+  border-radius: 2px;
 }
 .btn {
-    font-size: 15px;
-    font-weight: bold;
+  font-size: 15px;
+  font-weight: bold;
 }
 
 .row.content {height: 1500px}
@@ -90,11 +90,15 @@ body {
 }
 
 .container-fluid {
-    width: 100%;
-    padding-right: 15px;
-    padding-left: 0px !important;
-    margin-right: auto;
-    margin-left: auto;
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 0px !important;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.sidenav ul {
+	width: 200px;
 }
 
 .nav li a {
@@ -119,6 +123,10 @@ body {
 }
 
 #user_tbl_wrapper .row {
+ padding-top:10px;
+}
+
+#applications_tbl_wrapper .row {
  padding-top:10px;
 }
 

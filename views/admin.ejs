@@ -15,21 +15,28 @@
 		    </ul>
 		</nav>
 	  <div class="row content">
-	    <div class="col-sm-1 sidenav bg-dark">
-			<ul class="nav flex-column">
-              <li class="nav-link" >
-                <a href=''><i class="fa fa-users"></i> Users</a>
-              </li>
-            </ul>
-        </div>
-
-	    <div class="col-sm-11">
-	    	<div class="button-div float-right">
-				<button type="button" class="btn btn-secondary add-user-btn">Add User</button>
-			</div>
+	  	<div class="col-1 bg-dark">
+		    <div class="nav flex-column nav-pills" id="v-nav" role="tablist" aria-orientation="vertical">
+		      <a class="nav-link active" id="v-nav-uers-tab" data-toggle="pill" href="#user-info" role="tab" aria-controls="v-pills-home" aria-selected="true"><i class="fa fa-users"></i> Users</a>
+		      <a class="nav-link" id="v-nav-roles-permission-tab" data-toggle="pill" href="#roles-info" role="tab" aria-controls="v-pills-profile" aria-selected="false"><i class="fa fa-cog"></i> Roles/Permissions</a>		      
+		    </div>
+		  </div>
+		  <div class="col-11">
+		    <div class="tab-content" id="v-pills-tabContent">
+		    	<div class="tab-pane fade show active" id="user-info" role="tabpanel" aria-labelledby="v-nav-uers-tab">
+		      	<div class="button-div float-right">
+							<button type="button" class="btn btn-secondary add-user-btn">Add User</button>
+						</div>
 			
-			<table class="table table-bordered table-striped" id="user_tbl">
-			</table>
+						<div class="w-100">			
+							<table class="table table-bordered table-striped" id="user_tbl" style="width:100%">
+							</table>
+						</div>	
+					</div>
+
+			    <% include ./partials/roles-permissions %>
+			  </div>  		    
+		  </div>
 
 	    <div class="modal fade" id="create-usr-model" tabindex="-1" role="dialog" aria-hidden="true">
 			  <div class="modal-dialog" role="document">
@@ -157,5 +164,4 @@
 		    </div>
 	    </div>
 	  </div>
-</div>
 </html>
