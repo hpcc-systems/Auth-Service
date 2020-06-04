@@ -64,6 +64,22 @@ let removeRoles = async(roleId, applicationId) => {
 	});
 }
 
+let deleteAppRolesAndPermissions = (appId) => {
+	return new Promise((resolve, reject) => {
+		Role.findAll({where: {"applicationId":appId}}).then((roles) => {
+			let roleIds = [];
+			roles.forEach((role) => {  			
+				roleIds.push(role.id);
+			})
+			Permission.destroy({where:{"roleId": {[Op.in]: roleIds}}}).then((permissions)	=> {
+		  	Role.destroy({where: {"applicationId":appId}}).then((roleDestroyed) => {
+		  		resolve(roleDestroyed);
+		  	});
+			})
+		})
+	})
+}
+
 let removePermissions = async(permissionId, roleId) => {
 	return new Promise((resolve, reject) => {	
 		Permission.destroy({
@@ -82,7 +98,7 @@ router.post('/', function(req, res, next) {
 	console.log(appObj);
   Application.create(appObj).then((result) => {
   	console.log(result.get('id'))  	
-  	if(appObj.roles) {
+  	if(appObj.roles) {  		
   		appObj.roles.forEach(async (role) => {
   			let createRoleResult = await findOrCreateRole(role, result.get('id'));
   			console.log('roleid: '+createRoleResult[0].id);
@@ -111,43 +127,22 @@ router.put('/', function(req, res, next) {
 	  "owner": appObj.owner
 	}, {where:{id:appObj.id}}).then(async (application) => {  	
   	if(appObj.roles) {
-  		console.log('roles')
-  		appObj.roles.forEach(async (role) => {
-  			//add only new rules and permissions
-  			console.log('role.id: '+role.id);
-  			if(!role.id) {
-  				console.log(application);
+  		console.log('roles');
+  		//delete and recreate roles & permissions
+  		deleteAppRolesAndPermissions(appObj.id).then((rolesPermissionDeleted) => {
+	  		appObj.roles.forEach(async (role) => {
 	  			let createRoleResult = await findOrCreateRole(role, appObj.id);
-  				if(role.permissions) {
-			  		role.permissions.forEach( async (permission) => {
-			  			let createPermissionResult = await findOrCreatePermission(permission, createRoleResult[0].id);
-			  		})
-			  	}
-			  } else {
-			  	//only new permissions added
+	  			console.log('role.id: '+createRoleResult[0].id);
 			  	if(role.permissions) {
 			  		role.permissions.forEach( async (permission) => {
 			  			if(!permission.id) {
-			  				let createPermissionResult = await findOrCreatePermission(permission, role.id);
+			  				let createPermissionResult = await findOrCreatePermission(permission, createRoleResult[0].id);
 			  			}
 			  		})
 			  	}
-			  }
-  		})  		
-  	}
-
-  	if(appObj.roles_removed) {
-  		console.log('removing roles')
-  		appObj.roles_removed.forEach(async (removedRoles) => {
-  			let rolesRemovedResult = await removeRoles(removedRoles, appObj.id)
-  		});
-  	}
-
-  	if(appObj.permissions_removed) {
-  		appObj.permissions_removed.forEach(async (removedPermission) => {
-  			let permissionsRemovedResult = await removePermissions(removedPermission.id, removedPermission.roleId)	
-  		})  		
-  	}
+	  		})  		
+	  	})
+  	}  	
 
 	  res.json({"result":"success"});
   }).catch(function(err) {

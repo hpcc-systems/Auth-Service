@@ -14,7 +14,7 @@ module.exports = {
       name: {
         type: Sequelize.STRING
       },
-      applicationId: {
+      roleId: {
         type: Sequelize.INTEGER
       },
       createdAt: {

@@ -61,46 +61,22 @@ body {
   font-weight: bold;
 }
 
-.row.content {height: 1500px}
-
-/* Set gray background color and 100% height */
-.sidenav {
-	background-color: #f1f1f1;
-	height: 100%;
+.sidebar {
+	width: 180px;
+	min-height: calc(100vh - 50px);
+	position:fixed;
+	z-index: 1000;
 }
 
-/* On small screens, set height to 'auto' for sidenav and grid */
-@media screen and (max-width: 767px) {
-.sidenav {
-	height: auto;
-	padding: 10px;
+@media (min-width: 768px) {
+.main {
+	padding-right: 40px;
+	padding-left: 220px; /* 180 + 40 */
 }
-.row.content {
-	height: auto;
- }
 }
-
-.row {
-	display: -ms-flexbox;
-	display: flex;
-	-ms-flex-wrap: wrap;
-	flex-wrap: wrap;
-	margin-right: -15px;
-    margin-left: 0px !important;
+.nav li .active {
+	color: blue;
 }
-
-.container-fluid {
-  width: 100%;
-  padding-right: 15px;
-  padding-left: 0px !important;
-  margin-right: auto;
-  margin-left: auto;
-}
-
-.sidenav ul {
-	width: 200px;
-}
-
 .nav li a {
   color: white;
   font-size: 15px;
@@ -138,3 +114,8 @@ body {
 	width:450px !important;
 	height: 200px;
 }
+
+.permission-container {
+	padding-left:30px;
+}
+

@@ -47,6 +47,7 @@ $(document).ready(() => {
   //Applications table
   $("#applications_tbl tbody").on('click', ".app-edit", (evt) => {    
     var data = appTable.row($(evt.target).parents('tr')).data();
+    $('#create_app').html('Update Application')
     getApplicationDetails(data[Object.keys(data)[0]]);    
   })  
 
@@ -64,7 +65,7 @@ $(document).ready(() => {
           })
           .then(response => response.json())
           .then((application) => {
-            console.log('success');
+            //console.log('success');
             $('#applications_tbl').DataTable().ajax.reload();
             $( this ).dialog( "close" );
           });   
@@ -121,7 +122,23 @@ $(document).ready(() => {
       }
     ]
   });  
-  $( rolesTable.table().container() ).removeClass( 'form-inline' );      
+  $( rolesTable.table().container() ).removeClass( 'form-inline' );  
+
+  let addPermissions = (evt) => {
+    //console.log($(evt.target).parent().siblings().find('input').val());
+    evt.preventDefault();
+    evt.stopPropagation();
+    if($(evt.target).parent().siblings().find('input').val() != '') {
+      uniquePermissions.push($(evt.target).parent().siblings().find('input').val());
+      $('.select-permissions form').append('<div class="form-check available-permissions"><input type="checkbox" class="form-check-input" value="'+$('#newPermission').val()+'" />'+
+            '<label class="form-check-label"> '+$(evt.target).parent().siblings().find('input').val()+' </label></div>');
+      $(evt.target).parent().siblings().find('input').val('');
+    }
+  }
+
+  $(document).on('click', '.create-permission', (evt) => {
+    addPermissions(evt);
+  })
  
   $('#add_app_role').on('click', () => {    
     let selectedApps = [];
@@ -130,27 +147,37 @@ $(document).ready(() => {
     rolesTable.draw();
     $('#role').val('');
 
-    $('.create-permission').on('click', (evt) => {
-      console.log($(evt.target).parent().siblings().find('input').val());
-      evt.preventDefault();
-      evt.stopPropagation();
-      uniquePermissions.push($(evt.target).parent().siblings().find('input').val());
-      $('.select-permissions form').append('<div class="form-check available-permissions"><input type="checkbox" class="form-check-input" value="'+$('#newPermission').val()+'" />'+
-            '<label class="form-check-label"> '+$(evt.target).parent().siblings().find('input').val()+' </label></div>');
-      $(evt.target).parent().siblings().find('input').val('');
-    })
+    
   })  
 
-  $("#app_roles_tbl tbody").on('click', ".delete_permission", (evt) => {    
-    rolesTable
-    .row( $(evt.target).parents('tr') )
-    .remove()
-    .draw();  
+  $("#app_roles_tbl tbody").on('click', ".delete_permission", (evt) => {        
+    $( "#delete-role-confirm" ).dialog({
+      resizable: false,
+      height: "auto",
+      width: 400,
+      modal: false,
+      stack: true,
+      buttons: {
+        "Yes": function() {
+          var data = appTable.row($(evt.target).parents('tr')).data();
+          rolesTable
+            .row( $(evt.target).parents('tr') )
+            .remove()
+            .draw();  
+          $( this ).dialog( "close" );  
+        },
+        No: function() {
+          $( this ).dialog( "close" );
+        }
+      }
+    });    
+    $('.ui-dialog').css('z-index',1200);
+    
   })    
 
   //Create Applications
   $('#create_app').on('click', () => {
-    console.log('create-app clicked');
+    //console.log('create-app clicked');
     let postData = {
       "id": $('#appId').val(),
       "name": $('#appName').val(),
@@ -168,7 +195,7 @@ $(document).ready(() => {
       var node = this.node();
       let checkboxes = $(node).find("input:checkbox");
       for (var j=0; j<checkboxes.length; j++) {
-        console.log($(checkboxes[j]).prop("checked"));
+        //console.log($(checkboxes[j]).prop("checked"));
         if($(checkboxes[j]).prop("checked")) {
           permissions.push({"name":$(checkboxes[j]).attr('value')})
         }
@@ -180,7 +207,7 @@ $(document).ready(() => {
 
     postData.roles = rolesPermissions;
 
-    console.log(JSON.stringify(postData));
+    //console.log(JSON.stringify(postData));
 
     fetch('/application', {
       method: ($('#appId').val() != '') ? 'PUT' : 'POST',
@@ -191,7 +218,7 @@ $(document).ready(() => {
     })
     .then(response => response.json())
     .then((application) => {
-      console.log('success');
+      //console.log('success');
       $('#create-app-modal').modal('hide');
       $('#applications_tbl').DataTable().ajax.reload();
     });
@@ -225,7 +252,7 @@ $(document).ready(() => {
         })
       })
       uniquePermissions = [...new Set(availablePermissions)];
-      $('#create-app-modal').modal();
+      $('#create-app-modal').modal({modal:false});
 
       rolesTable.rows.add(selectedPermission);
       rolesTable.draw();    
