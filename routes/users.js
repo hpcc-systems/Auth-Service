@@ -131,7 +131,6 @@ router.post('/changepwd', (req, res) => {
 	    	{ password: updatedhash },
 	    	{ where: {username:req.body.username}}
     	).then(function (updated) {
-    		console.log('password: '+updated);
     		res.json({"result":"success"});
     	})
     } else {
