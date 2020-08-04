@@ -11,6 +11,7 @@ var usersRouter = require('./routes/users');
 var authRouter = require('./routes/auth');
 var uiRouter = require('./routes/ui');
 var appRouter = require('./routes/application');
+var authV20Router = require('./routes/authv20');
 
 var app = express();
 
@@ -25,11 +26,12 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', withAuth, indexRouter);
 app.use('/login', loginRouter);
 app.use('/users', withAuth, usersRouter);
+app.use('/auth/v20', authV20Router);
 app.use('/auth', authRouter);
 app.use('/admin', withAuth, uiRouter);
+app.use('/', withAuth, indexRouter);
 app.use('/application', withAuth, appRouter); 
 
 
