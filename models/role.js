@@ -7,10 +7,13 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true
     },
     name: DataTypes.STRING,
-    applicationId: DataTypes.INTEGER
+    description: DataTypes.STRING,
+    applicationId: DataTypes.INTEGER,
+    permissions: DataTypes.TEXT
   }, {});
   Role.associate = function(models) {
     //models.Role.belongsToMany(models.User, { through: 'User_Roles', foreignKey: 'roleId'});
+    
     models.Role.hasMany(models.Permission);
     models.Role.belongsTo(models.Application);
   };

@@ -9,10 +9,11 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     description: DataTypes.STRING,
     email: DataTypes.STRING,
-    owner: DataTypes.STRING
+    owner: DataTypes.STRING,
+    applicationType: DataTypes.STRING        
   }, {});
   Application.associate = function(models) {
     models.Application.hasMany(models.Role);
-  };
-  return Application;
+   } 
+   return Application;
 };
