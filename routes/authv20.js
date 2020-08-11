@@ -56,17 +56,27 @@ let validateUser = (username, password) => {
 let populatePermissions = (user) => {
   let permissions_roles = {};
   user.Roles.forEach((role) => {
-    console.log(role.Permissions);
+    console.log(role);
+    console.log(role.permissions);
     //if more than one permission, set as a array, else add as string
-    if(role.Permissions.length > 1) {
+    let permissions = JSON.parse(role.permissions);
+    permissions.forEach((permission) => {
+      if(permissions_roles.hasOwnProperty(permission.name)) {
+        let accessTypes = new Set(permissions_roles[permission.name].concat(permission.accessType.split(',')))
+        permissions_roles[permission.name] = Array.from(accessTypes);
+      } else {
+        permissions_roles[permission.name] = permission.accessType.split(',');
+      }
+    })
+    /*if(role.permissions.length > 1) {
       let permissions = [];
-      role.Permissions.forEach((permission) => {          
+      role.permissions.forEach((permission) => {          
         permissions.push(permission.name);
       })
       permissions_roles[role.name] = permissions;
     } else {
       permissions_roles[role.name] = role.Permissions[0].name
-    }
+    }*/
   })
   console.log('permissions_roles: '+JSON.stringify(permissions_roles));
   return permissions_roles;

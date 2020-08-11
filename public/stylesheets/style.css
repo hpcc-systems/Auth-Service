@@ -12,7 +12,7 @@ body {
 
 .nav-link {
     display: block;
-    padding: 5px;
+    padding: .5rem 1rem;
 }
 
 .container i {
@@ -111,11 +111,28 @@ body {
 }
 
 #role_tbl {
-	width:450px !important;
 	height: 200px;
 }
 
 .permission-container {
 	padding-left:30px;
 }
+
+.available-permissions {
+	position: relative;
+  display: block;
+  padding-left: 35px;
+  padding-top: 10px;
+}
+
+.tab-content .nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+  color: #fff;
+  background-color: #6c757d;
+}
+
+#permissions_tbl_wrapper {
+  min-height: 600px;
+}
+
+
 

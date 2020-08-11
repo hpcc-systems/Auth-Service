@@ -4,11 +4,12 @@ $(document).ready(() => {
     "paging":   false,
     "info":     false,
     "searching": false,
+    "autoWidth": false,
     data: roles,
     columns: [
-      { title: "Application", data:"application" },
-      { title: "Role", data:"role" },
-      { title: "Permissions", data:"permission" },
+      { title: "Application", data:"application", width:'100px' },
+      { title: "Role", data:"role", width:'200px' },
+      { title: "Permissions", data:"permission", width:'400px' },
       { title: "roleId", data:"roleId",  visible: false},
       { title: "", data: "", width:'10px',
         render: function ( data, type, full, meta ) {
@@ -45,7 +46,8 @@ $(document).ready(() => {
       return false;
     }
     let selectedRole = [];      
-    let permission = $('#inputApplication option:selected').data('role').filter(role => role.id == $('#inputRole option:selected').val())[0].Permissions.map(permission => permission.name).join(',');
+    //let permission = $('#inputApplication option:selected').data('role').filter(role => role.id == $('#inputRole option:selected').val())[0].permissions.map(permission => permission.name).join(',');
+    let permission = $('#inputApplication option:selected').data('role').filter(role => role.id == $('#inputRole option:selected').val())[0].permissions;
     selectedRole.push({'application': $('#inputApplication option:selected').text(), 'role': $('#inputRole option:selected').text(), 'roleId': $('#inputRole').val(), 'permission':permission});
     roleTable.rows.add(selectedRole);
     roleTable.draw();
@@ -130,7 +132,8 @@ $(document).ready(() => {
           'application': role.Application.name,
           'role': role.name,
           'roleId': role.id,
-          'permission': role.Permissions.map(permission => permission.name).join(',')
+          //'permission': role.Permissions.map(permission => permission.name).join(',')
+          'permission': role.permissions
         })
       })
 
