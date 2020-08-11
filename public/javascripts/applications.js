@@ -72,11 +72,7 @@ $(document).ready(() => {
     getApplicationDetails($selectedApplicationId);
     $('.appdetails').removeClass('active');    
     $('#application-nav').trigger('click');
-  }) 
-
-  $('#back-to-roles-link').on('click', () => {
-    $('#back-to-roles-link').removeClass('active');
-  })
+  })   
 
   $("#applications_tbl tbody").on('click', ".app-delete", (evt) => {    
     $( "#delete-app-confirm" ).dialog({
@@ -105,6 +101,12 @@ $(document).ready(() => {
   })   
 
   //Roles tab
+  $('#roles_tbl').on('init.dt', () => {
+    $('.new-role-btn') 
+     .attr('data-toggle', 'collapse')
+     .attr('data-target', '#new-role');  
+  })
+
   let applicationPermissions = [], unqiuePermissionTypes =[];
   let rolesTable = $('#roles_tbl').DataTable( {
     "paging": false,
@@ -113,7 +115,11 @@ $(document).ready(() => {
     "autoWidth": false,
     "scrollY":        "400px",
     "scrollCollapse": true,
-
+    dom: 'Bfrtip',
+    buttons: [{
+       text: 'New Role',
+       className: 'btn btn-outline new-role-btn'
+    }],
     data: applicationPermissions,
     columns: [
       { title: "Name", width:'200px',
@@ -128,6 +134,7 @@ $(document).ready(() => {
         }
       }
     ]
+    
   });  
   $( rolesTable.table().container() ).removeClass( 'form-inline' );  
 
@@ -144,7 +151,14 @@ $(document).ready(() => {
       console.log($(evt.target))
       accessTypeSelected($(evt.target));
     })
+
+    $('.back-role-btn').on('click', () => {
+    console.log('back role button clicked...')
+    $('.back-role-btn').removeClass('active');
+    })
   }) 
+
+  
 
   var accessTypeSelected = (formcheckInput) => {
     //check/uncheck the .permission-select checkboxes based on accessType checkbox selection
@@ -156,14 +170,25 @@ $(document).ready(() => {
     updatePermissions();
   }
 
+  $('#permissions_tbl').on('init.dt', () => {
+    $('.back-role-btn') 
+     .attr('data-toggle', 'pill')
+     .attr('data-target', '#nav-role');  
+  })
+
   let permissionsTable = $('#permissions_tbl').DataTable( {
     "paging": false,
-    "info": false,
+    "info": false,    
     "searching": true,
     "autoWidth": false,
-    "scrollY": "650px",
+    scrollY: '50vh',
     "scrollCollapse": true,
     data: applicationPermissions,
+    dom: 'Bfrtip',
+    buttons: [{
+       text: 'Back to Roles',
+       className: 'btn btn-outline back-role-btn'
+    }],
     columnDefs: [{
         targets: 0,
         data: 2,

@@ -58,9 +58,9 @@
 						  	<span class="col-8">
 						  		<h6><span class="role_name_heading"></span></h6>
 						  	</span>						  		
-						  	<span class="col-4 back-to-roles"><a class="btn btn-link float-right" id="back-to-roles-link" role="button" data-toggle="pill" href="#nav-role">Back to Roles</a></span>
+						  	<!--<span class="col-4 back-to-roles"><a class="btn btn-link float-right" id="back-to-roles-link" role="button" data-toggle="pill" href="#nav-role">Back to Roles</a></span>-->
 						  </div>	
-							<div class="form-row col-12 pt-2 collapse" id="new-permission">
+							<div class="form-row col-12 collapse" id="new-permission">
 						    <div class="form-row col-12">
 							    <div class="form-group col-md-4">
 							      <label for="appName">Name</label>
@@ -79,29 +79,29 @@
 						  </div>	
 						  <div class="col-12 pt-2" >
 						  	<table class="table table-bordered table-striped" id="permissions_tbl" style="width:100%"></table>			
-						  </div>	
+						  </div>
 					  </form>						
 					</div>	
 
 					<div class="tab-pane fade" id="nav-role" role="tabpanel" aria-labelledby="application-role">
 						<form id="application-role-form">
-							<button class="btn btn-outline-primary btn-sm" type="button" data-toggle="collapse" data-target="#new-role" aria-expanded="false" aria-controls="new-permission">
+							<!--<button class="btn btn-outline-primary btn-sm" type="button" data-toggle="collapse" data-target="#new-role" aria-expanded="false" aria-controls="new-permission">
 						    New Role 
-						  </button>
-							<div class="form-row col-10 pt-2 collapse" id="new-role">
-						    <div class="form-group col-md-5">
+						  </button>-->
+							<div class="form-row col-10 collapse" id="new-role">
+						    <div class="form-group col-md-4">
 						      <label for="appName">Name</label>
 						      <input type="text" class="form-control" id="roleName" placeholder="Role Name">
 						    </div>
-						    <div class="form-group col-md-5">
+						    <div class="form-group col-md-4">
 						    	<label for="appName">Description</label>
 						      <input type="textarea" class="form-control" id="roleDescription" placeholder="Description">							      
 						    </div>	
-						    <div class="col-md-4 pt-4">
+						    <div class="col-md-2 pt-4">
 						    	<button type="button" class="btn btn-primary btn-sm add-new-role">Add New Role</button>
 						    </div>	
 						  </div>	
-						  <div class="col-12 pt-2" >							    				    										    
+						  <div class="col-12" >							    				    										    
 						    	<table class="table table-bordered table-striped" id="roles_tbl" style="width:100%"></table>
 						    </div>
 					  </form>

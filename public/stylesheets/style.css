@@ -131,7 +131,15 @@ body {
 }
 
 #permissions_tbl_wrapper {
-  min-height: 600px;
+	min-height:65vh;
+}
+
+#roles_tbl_wrapper .dt-buttons {
+	padding-top:15px;
+}
+
+#permissions_tbl_wrapper .dt-buttons {
+	padding-top:15px;	
 }
 
 
