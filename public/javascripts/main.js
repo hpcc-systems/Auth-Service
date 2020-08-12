@@ -246,6 +246,11 @@ $(document).ready(() => {
     //loadPermissions(role ? role.Permissions : []);
   });
 
+  //refresh the user table while clicking Users nav option on left nav
+  $('#v-nav-uers-tab').on('click', () => {
+    $('#user_tbl').DataTable().ajax.reload();
+  })
+
 });
 
 function getApplications(selectedValue) {
