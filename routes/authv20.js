@@ -65,7 +65,7 @@ let populatePermissions = (user) => {
         let accessTypes = new Set(permissions_roles[permission.name].concat(permission.accessType.split(',')))
         permissions_roles[permission.name] = Array.from(accessTypes);
       } else {
-        permissions_roles[permission.name] = permission.accessType.split(',');
+        permissions_roles[permission.name] = permission.accessType.indexOf(',') > 0 ? permission.accessType.split(',') : permission.accessType;
       }
     })
     /*if(role.permissions.length > 1) {

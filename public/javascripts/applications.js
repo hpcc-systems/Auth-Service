@@ -148,12 +148,14 @@ $(document).ready(() => {
     $('#application-role').addClass('active');
 
     $('.select-permissions').on('change', '.form-check-input', (evt) => {
-      console.log($(evt.target))
       accessTypeSelected($(evt.target));
     })
 
+    $('.permission-select').on('change', '', (evt) => {
+      updatePermissions();
+    })
+
     $('.back-role-btn').on('click', () => {
-    console.log('back role button clicked...')
     $('.back-role-btn').removeClass('active');
     })
   }) 
@@ -518,20 +520,7 @@ $(document).ready(() => {
        'applicationType': $('#appType').val()
        //'role': $selectedRole
       }
-      /*console.log($selectedRole);
-      if($selectedRole) {
-        $('#permissions_tbl_wrapper input[type="checkbox"].permission-select:checked').each(function() {
-          let permission = {}, accessType=[];
-          permission.name = $(this).closest('td').next('td').text();
-          $(this).closest('td').siblings().eq(2).find('input[type="checkbox"]:checked').each(function( index ) {
-            accessType.push($(this).val())
-          });
-          
-          permission.accessType = accessType.join(',');
-          checkedPermissions.push(permission);
-        });
-        application.role.permissions = checkedPermissions;
-      }*/
+      
       let roles = [];
       Object.keys($rolespermissions).forEach((rolesPermission) => {
         roles.push($rolespermissions[rolesPermission])
