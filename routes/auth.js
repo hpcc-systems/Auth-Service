@@ -11,9 +11,23 @@ let UserRoles = models.User_Roles;
 let Permissions = models.Permission;
 let Audit = models.Audit;
 const jwksClient = require('jwks-rsa');
+const { body, query, check, validationResult } = require('express-validator');
+const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {    
+  return `${location}[${param}]: ${msg}`;
+};
+
 
 /* GET users listing. */
-router.post('/login', function(req, res, next) {
+router.post('/login', [
+  body('username')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
+  body('password').isLength({ min: 4 })  
+], (req, res) => {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+
   User.findOne({
     where: {
       username: req.body.username

@@ -11,8 +11,11 @@ let UserRoles = models.User_Roles;
 let Permissions = models.Permission;
 let Audit = models.Audit;
 let RefreshToken = models.Refreshtoken;
-
 const privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/jwt_key'), 'utf8');
+const { body, query, check, validationResult } = require('express-validator');
+const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {    
+  return `${location}[${param}]: ${msg}`;
+};
 
 const signOptions = {
  algorithm:  "RS256"
@@ -82,7 +85,15 @@ let populatePermissions = (user) => {
   return permissions_roles;
 }
 
-router.post('/login', async function(req, res, next) {  
+router.post('/login', [
+  body('username')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
+  body('password').isLength({ min: 4 })  
+], async (req, res) => {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
   try {
     let user = await validateUser(req.body.username, req.body.password);
     // PRIVATE  	

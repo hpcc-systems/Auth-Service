@@ -8,6 +8,11 @@ let Role = models.Role;
 let Permission = models.Permission;
 let UserRoles = models.User_Roles;
 const Op = Sequelize.Op;
+const { body, query, check, validationResult } = require('express-validator');
+const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {    
+  return `${location}[${param}]: ${msg}`;
+};
+
 /* GET users listing. */
 router.get('/all', function(req, res, next) {
   	User.findAll({
@@ -53,7 +58,23 @@ router.post('/delete', (req, res) => {
     });
 });
 
-router.post('/user', (req, res) => {
+router.post('/user', [
+  body('firstName')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid First Name'),
+  body('lastName')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Last Name'),
+  body('username')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
+  body('email')
+    .isEmail().withMessage('Invalid Email Address'),
+  body('organization')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),        
+  body('password').isLength({ min: 4 })  
+], (req, res) => {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
     var fieldsToUpdate={}, hash;
     try {
     	if (req.body.password) {
@@ -109,7 +130,18 @@ router.post('/user', (req, res) => {
     }
 });
 
-router.post('/changepwd', (req, res) => {
+router.post('/changepwd', [
+  body('username')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),       
+  body('newpassword').isLength({ min: 4 }).withMessage('Invalid New Password'),
+  body('confirmpassword').isLength({ min: 4 }).withMessage('Invalid Confirm New Password')    
+], (req, res) => {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    //return res.status(422).json({ success: false, errors: errors.array() });
+    return res.status(422).send({ success: false, errors: errors.array() });
+  }
+
 	User.findOne({
     where: {
       username: req.body.username

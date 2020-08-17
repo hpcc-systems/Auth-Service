@@ -12,6 +12,7 @@
     "dotenv": "^8.2.0",
     "ejs": "^2.7.4",
     "express": "~4.16.1",
+    "express-validator": "^6.6.1",
     "http-errors": "~1.6.3",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^1.8.1",
