@@ -22,7 +22,7 @@ const signOptions = {
 };
 
 let payload = {
-  iss:'hpcc_systems_issuer',  
+  //iss:'hpcc_systems_issuer',  
   aud:'hpcc_systems_platform'  
 }
 
@@ -59,8 +59,6 @@ let validateUser = (username, password) => {
 let populatePermissions = (user) => {
   let permissions_roles = {};
   user.Roles.forEach((role) => {
-    console.log(role);
-    console.log(role.permissions);
     //if more than one permission, set as a array, else add as string
     let permissions = JSON.parse(role.permissions);
     permissions.forEach((permission) => {
@@ -70,36 +68,29 @@ let populatePermissions = (user) => {
       } else {
         permissions_roles[permission.name] = permission.accessType.indexOf(',') > 0 ? permission.accessType.split(',') : permission.accessType;
       }
-    })
-    /*if(role.permissions.length > 1) {
-      let permissions = [];
-      role.permissions.forEach((permission) => {          
-        permissions.push(permission.name);
-      })
-      permissions_roles[role.name] = permissions;
-    } else {
-      permissions_roles[role.name] = role.Permissions[0].name
-    }*/
+    })    
   })
-  console.log('permissions_roles: '+JSON.stringify(permissions_roles));
+  
   return permissions_roles;
 }
 
-router.post('/login', [
+router.post('/login', [  
   body('username')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
-  body('password').isLength({ min: 4 })  
-], async (req, res) => {
+  body('password').isLength({ min: 4 }),  
+  body('client_id').exists(),
+  body('client_id').not().isEmpty()
+], async (req, res) => {  
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
+    return res.status(422).json({ error: "Invalid input" });
   }
+  console.log('URL: '+req.protocol + '://' + req.get('host') + req.originalUrl);
   try {
     let user = await validateUser(req.body.username, req.body.password);
     // PRIVATE  	
     let refreshToken = bcrypt.genSaltSync(10);  
-    console.log('refreshToken: '+refreshToken);
-    //payload.refresh_token = refreshToken;
+    payload.iss = req.protocol + '://' + (req.get('host') || req.get('X-Forwarded-Host')) + req.originalUrl;
     payload.sub = user.username;
     payload.iat = Math.floor(Date.now() / 1000);
     payload.exp = Math.floor(Date.now() / 1000) + (60 * 15);
@@ -109,16 +100,12 @@ router.post('/login', [
       ...payload,
       ...populatePermissions(user)
     }
-    console.log(JSON.stringify(fullPayload));
-    //console.log('payload: '+JSON.stringify(payload));
     var token = jwt.sign(fullPayload, privateKey, signOptions);
     //invalidate current refresh token
-    RefreshToken.update({revoked:1, last_accessed: new Date()}, {where:{username: req.body.username}}).then(audit => {
+    RefreshToken.update({revoked:1, last_accessed: new Date()}, {where:{client_id: req.body.client_id}}).then(audit => {
       //store new refresh token
-      RefreshToken.create({username:req.body.username, token: refreshToken, last_accessed: new Date()}).then(audit => {
-        console.log('refresh token stored:'+ req.body.username);
+      RefreshToken.create({username:req.body.username, client_id: req.body.client_id, token: refreshToken, last_accessed: new Date()}).then(audit => {
          Audit.create({username:req.body.username, action:'login'}).then(audit => {
-          console.log('audit created for login:'+ req.body.username);
             res.status(200).send({'token_type':'Bearer', 'refresh_token': refreshToken, 'id_token': token });        
         });
       });
@@ -130,12 +117,20 @@ router.post('/login', [
 });
 
 
-router.post('/tokenrefresh', async function(req, res, next) {
+router.post('/tokenrefresh', [
+  body('refresh_token').exists(),
+  body('refresh_token').not(),
+  body('client_id').exists(),
+  body('client_id').not().isEmpty()
+], async function(req, res, next) {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ error: "Invalid input" });
+  }
   try {        
-
     RefreshToken.findOne({
       where: {
-        token: req.body.refresh_token, revoked: 0
+        token: req.body.refresh_token, revoked: 0, client_id: req.body.client_id
       }    
     }).then(token => {    
       if(!token) {
@@ -148,10 +143,9 @@ router.post('/tokenrefresh', async function(req, res, next) {
         include:[{model: models.Role, include: [models.Permission] }]
       }).then(user => {
         let newRefreshToken = bcrypt.genSaltSync(10);  
-        console.log('newRefreshToken: '+newRefreshToken);
         let username = user.username;
-        console.log('username: '+user.username);
         //payload.refresh_token = newRefreshToken;
+        payload.iss = req.protocol + '://' + (req.get('host') || req.get('X-Forwarded-Host')) + req.originalUrl;
         payload.sub = user.username;
         payload.iat = Math.floor(Date.now() / 1000);
         payload.exp = Math.floor(Date.now() / 1000) + (60 * 15);    
@@ -163,8 +157,8 @@ router.post('/tokenrefresh', async function(req, res, next) {
 
         var token = jwt.sign(fullPayload, privateKey, signOptions);
 
-        RefreshToken.update({revoked:1, last_accessed: new Date()}, {where:{token: req.body.refresh_token}}).then(audit => {
-          RefreshToken.create({username:username, token: newRefreshToken, last_accessed: new Date()}).then(audit => {
+        RefreshToken.update({revoked:1, last_accessed: new Date()}, {where:{token: req.body.refresh_token, client_id: req.body.client_id}}).then(audit => {
+          RefreshToken.create({username:username, token: newRefreshToken, client_id: req.body.client_id, last_accessed: new Date()}).then(audit => {
             res.status(200).send({ 'token_type':'Bearer', 'refresh_token': newRefreshToken, id_token: token });
           });
         });
