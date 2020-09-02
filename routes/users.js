@@ -61,12 +61,15 @@ router.post('/delete', (req, res) => {
 router.post('/user', [
   body('firstName')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid First Name'),
+  body('lastName').optional({checkFalsy:true})
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Last Name'),
   body('username')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
-  body('email')
+  body('email').optional({checkFalsy:true})
     .isEmail().withMessage('Invalid Email Address'),
   body('organization')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),          
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),        
+  body('password').optional({checkFalsy:true}).isLength({ min: 4 })  
 ], (req, res) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
@@ -172,6 +175,19 @@ router.post('/changepwd', [
 router.post('/signout', (req, res) => {
 	res.clearCookie("auth");
     res.json({"result":"signedout"});
+});
+
+router.get('/details', function(req, res, next) {
+  User.findAll({where:{
+    "username": {
+      [Op.in]: req.query.usernames.split(',')
+    }
+  }}).then(function(users) {
+      res.json(users);
+  })
+  .catch(function(err) {
+      console.log(err);
+  });
 });
 
 module.exports = router;
