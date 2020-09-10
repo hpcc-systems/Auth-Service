@@ -67,7 +67,7 @@ router.post('/user', [
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
   body('email').optional({checkFalsy:true})
     .isEmail().withMessage('Invalid Email Address'),
-  body('organization')
+  body('organization').optional({checkFalsy:true})
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),        
   body('password').optional({checkFalsy:true}).isLength({ min: 4 })  
 ], (req, res) => {

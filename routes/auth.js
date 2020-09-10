@@ -116,5 +116,74 @@ router.post('/verify', function(req, res, next) {
   }
 });
 
+router.post('/registerUser', [
+  body('firstName')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid First Name'),
+  body('lastName').optional({checkFalsy:true})
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Last Name'),
+  body('username')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
+  body('email').optional({checkFalsy:true})
+    .isEmail().withMessage('Invalid Email Address'),
+  body('organization').optional({checkFalsy:true})
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),        
+  body('password').optional({checkFalsy:true}).isLength({ min: 4 })  
+], (req, res) => {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+    var fieldsToUpdate={}, hash;
+    try {
+      if (req.body.password) {
+          hash = bcrypt.hashSync(req.body.password, 10);
+      }
+      User.findOrCreate({
+        where: {username: req.body.username},
+        include: [{model:Role}],
+        defaults: {
+          "firstName": req.body.firstName,
+          "lastName": req.body.lastName,
+          "username": req.body.username,
+          "password": hash,
+          "email": req.body.email,
+          "organization": req.body.organization
+        }
+      }).then(async function(result) {     
+        //update scenario
+        if(!result[1]) {
+          let missingRoleFound = false;
+          let roles = await Role.findAll({where: {"name":req.body.role}})          
+          roles.map((role) => {
+            if(result[0].Roles.filter(userRole => userRole.id == role.id).length == 0) {
+              missingRoleFound = true;
+              console.log("xxx")
+              result[0].addRole(role).then((role));
+            }
+          });
+          console.log('missingRoleFound: '+missingRoleFound)
+          if(!missingRoleFound) {
+            return res.status(500).json({ error: 'User already associated with this email address' });
+          }
+          res.json({"success":"true"});
+        } else {  
+          //new user
+          Role.findAll({where: {"name":req.body.role}}).then(function(roles) {
+            roles.forEach((role) => {
+              result[0].addRole(role).then((roleAdded) => {                            
+              });
+            });
+            res.json({"success":"true"});
+          })        
+        }  
+      }), function(err) {
+          return res.status(500).send(err);
+      }
+    } catch (err) {
+        console.log('err', err);
+    }
+});
+
+
 
 module.exports = router;
