@@ -153,17 +153,15 @@ router.post('/registerUser', [
         //update scenario
         if(!result[1]) {
           let missingRoleFound = false;
-          let roles = await Role.findAll({where: {"name":req.body.role}})          
+          let roles = await Role.findAll({where: {"id": req.body.applicationId, "name":req.body.role}})          
           roles.map((role) => {
             if(result[0].Roles.filter(userRole => userRole.id == role.id).length == 0) {
               missingRoleFound = true;
-              console.log("xxx")
               result[0].addRole(role).then((role));
             }
           });
-          console.log('missingRoleFound: '+missingRoleFound)
           if(!missingRoleFound) {
-            return res.status(500).json({ error: 'User already associated with this email address' });
+            return res.status(500).json({ error: 'There is already a user account associated with this email address' });
           }
           res.json({"success":"true"});
         } else {  
