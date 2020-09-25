@@ -133,53 +133,58 @@ router.post('/registerUser', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-    var fieldsToUpdate={}, hash;
-    try {
-      if (req.body.password) {
-          hash = bcrypt.hashSync(req.body.password, 10);
-      }
-      User.findOrCreate({
-        where: {username: req.body.username},
-        include: [{model:Role}],
-        defaults: {
-          "firstName": req.body.firstName,
-          "lastName": req.body.lastName,
-          "username": req.body.username,
-          "password": hash,
-          "email": req.body.email,
-          "organization": req.body.organization
-        }
-      }).then(async function(result) {     
-        //update scenario
-        if(!result[1]) {
-          let missingRoleFound = false;
-          let roles = await Role.findAll({where: {"id": req.body.applicationId, "name":req.body.role}})          
-          roles.map((role) => {
-            if(result[0].Roles.filter(userRole => userRole.id == role.id).length == 0) {
-              missingRoleFound = true;
-              result[0].addRole(role).then((role));
-            }
-          });
-          if(!missingRoleFound) {
-            return res.status(500).json({ error: 'There is already a user account associated with this email address' });
-          }
-          res.json({"success":"true"});
-        } else {  
-          //new user
-          Role.findAll({where: {"name":req.body.role}}).then(function(roles) {
-            roles.forEach((role) => {
-              result[0].addRole(role).then((roleAdded) => {                            
-              });
-            });
-            res.json({"success":"true"});
-          })        
-        }  
-      }), function(err) {
-          return res.status(500).send(err);
-      }
-    } catch (err) {
-        console.log('err', err);
+  var fieldsToUpdate={}, hash;
+  try {
+    if (req.body.password) {
+        hash = bcrypt.hashSync(req.body.password, 10);
     }
+    User.findOrCreate({
+      where: {username: req.body.username},
+      include: [{model:Role}],
+      defaults: {
+        "firstName": req.body.firstName,
+        "lastName": req.body.lastName,
+        "username": req.body.username,
+        "password": hash,
+        "email": req.body.email,
+        "organization": req.body.organization
+      }
+    }).then(async function(result) {
+      let promises=[];     
+      //update scenario
+      if(!result[1]) {
+        let missingRoleFound = false;
+        let roles = await Role.findAll({where: {"applicationId": req.body.applicationId, "name":req.body.role}})          
+        console.log('roles found: '+roles.length);
+        roles.map((role) => {
+          if(result[0].Roles.filter(userRole => userRole.id == role.id).length == 0) {
+            missingRoleFound = true;
+            promises.push(result[0].addRole(role));
+          }
+        });
+        if(!missingRoleFound) {
+          return res.status(500).json({ error: 'There is already a user account associated with this user name' });
+        }
+        Promise.all(promises).then(() => {
+          res.status(202).json({"success":"true"});             
+        });
+    } else {  
+        //new user
+        Role.findAll({where: {"name":req.body.role}}).then(function(roles) {
+          roles.forEach((role) => {
+            promises.push(result[0].addRole(role))
+          });          
+        })   
+        Promise.all(promises).then(() => {
+          res.status(201).json({"success":"true"});
+        });             
+      }  
+    }), function(err) {
+        return res.status(500).send(err);
+    }
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
 
