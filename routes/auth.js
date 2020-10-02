@@ -10,7 +10,10 @@ let Role = models.Role;
 let UserRoles = models.User_Roles;
 let Permissions = models.Permission;
 let Audit = models.Audit;
+let Application = models.Application;
+let PasswordReset = models.PasswordReset;
 const jwksClient = require('jwks-rsa');
+const NotificationModule = require('../utils/notifications');
 const { body, query, check, validationResult } = require('express-validator');
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {    
   return `${location}[${param}]: ${msg}`;
@@ -187,6 +190,87 @@ router.post('/registerUser', [
   }
 });
 
+
+router.post('/forgotPassword', [
+  body('username')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
+], (req, res) => {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+
+  try {    
+    User.findOne({
+      where: {
+        username: req.body.username
+      }      
+    }).then(user => {
+      if(user == null) {        
+        res.status(500).json({"success":"false", "message": "User not found."});
+      }
+      Application.findOne({
+        where: {
+          id: req.body.applicationId
+        }
+      }).then((application) => {
+        if(application == null) {
+          res.status(500).json({"success":"false", "message": "Application not found."});
+        }
+        PasswordReset.create({userid:user.id}).then((passwordReset) => {
+          //send password reset email.
+          let resetUrl = req.body.resetUrl + "/" + passwordReset.id
+          //NotificationModule.notifyPasswordReset(user.email, application.name, user.username, resetUrl);    
+          res.status(200).json({"success":"true", "resetUrl": resetUrl});
+        })
+      })
+    })
+    //res.status(500).json({"success":"false"});
+  } catch (err) {
+    console.log('err', err);
+  }
+});  
+
+router.post('/resetPassword', [
+  body('id')
+    .isUUID(4).withMessage('Invalid id'),
+  body('password').isLength({ min: 4 })    
+], (req, res) => {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  }
+
+  try {    
+    PasswordReset.findOne({where: {id:req.body.id}}).then((resetRecord) => {
+      if(resetRecord == null) {
+        res.status(500).json({"success":"false", "message": "Invalid Password Reset Request"});          
+      } else {
+        console.log('resetRecord: '+resetRecord)
+        User.findOne({
+          where: {
+            id: resetRecord.userid
+          }      
+        }).then(user => {
+          if(user == null) {
+            res.status(500).json({"success":"false", "message": "Invalid Password Reset Request"});
+          }
+          let hash = bcrypt.hashSync(req.body.password, 10);
+          User.update(
+            {password: hash},
+            {where: {id: resetRecord.userid}
+          }).then((application) => {
+            PasswordReset.destroy({where:{id:req.body.id}}).then(() => {
+              res.status(200).json({"success":"true"});
+            })          
+          })
+        })
+      }
+    })
+  } catch (err) {
+    console.log('err', err);
+  }
+}); 
 
 
 module.exports = router;
