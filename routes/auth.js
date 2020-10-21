@@ -35,9 +35,8 @@ router.post('/login', [
     where: {
       username: req.body.username
     },
-    include:[{model: models.Role, include: [models.Permission] }]
+    include:[{model: models.Role }]
   }).then(user => {
-    console.log(user);
     if (!user) {
       throw new Error('User Not Found.');
     }
@@ -70,10 +69,11 @@ router.post('/login', [
       var token = jwt.sign(payload, privateKey, signOptions);
 
       Audit.create({username:req.body.username, action:'login'}).then(audit => {
-        console.log('audit created for login:'+ req.body.username);
+        console.log('audit created for login:'+ req.body.username + ' token: '+token);
+        res.status(200).send({ auth: true, accessToken: token });
       });
-      res.cookie('auth',token);
-      res.status(200).send({ auth: true, accessToken: token });
+      //res.cookie('auth',token);
+      
     //})
 
   }).catch(err => {

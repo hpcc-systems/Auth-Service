@@ -10,6 +10,7 @@ let Role = models.Role;
 let UserRoles = models.User_Roles;
 let Permissions = models.Permission;
 let Audit = models.Audit;
+let Application = models.Application;
 let RefreshToken = models.Refreshtoken;
 const privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/jwt_key'), 'utf8');
 const { body, query, check, validationResult } = require('express-validator');
@@ -37,8 +38,7 @@ let validateUser = (username, password) => {
     User.findOne({
       where: {
         username: username
-      },
-      include:[{model: models.Role, include: [models.Permission] }]
+      }
     }).then(user => {
       if (!user) {
         //throw new Error('User Not Found.');
@@ -56,22 +56,53 @@ let validateUser = (username, password) => {
   })
 }
 
-let populatePermissions = (user) => {
-  let permissions_roles = {};
-  user.Roles.forEach((role) => {
-    //if more than one permission, set as a array, else add as string
-    let permissions = JSON.parse(role.permissions);
-    permissions.forEach((permission) => {
-      if(permissions_roles.hasOwnProperty(permission.name)) {
-        let accessTypes = new Set(permissions_roles[permission.name].concat(permission.accessType.split(',')))
-        permissions_roles[permission.name] = Array.from(accessTypes);
-      } else {
-        permissions_roles[permission.name] = permission.accessType.indexOf(',') > 0 ? permission.accessType.split(',') : permission.accessType;
+let populatePermissions = (user, clientId) => {  
+  return new Promise((resolve, reject) => {
+    const query = "select r.permissions from users u, user_roles ur, application ap, roles r " +
+      "where u.username = (:username) and u.deletedAt is null " +
+      "and ap.clientId = (:clientId) and ap.deletedAt is null "+
+      "and ur.applicationId=ap.id and ur.deletedAt is null "+
+      "and ur.roleId=r.id and r.deletedAt is null order by ur.priority asc; "
+      
+    models.sequelize.query(query, {
+      type: models.sequelize.QueryTypes.SELECT,
+      replacements: { username: user.username, clientId: clientId }
+    }).then(roles => {
+
+      if (!roles) {
+        //throw new Error('User Not Found.');
+        reject("Invalid User!")
       }
-    })    
+      console.log(roles);      
+      let permissions_roles = {};
+      roles.forEach((role) => {        
+        let permissions = role.permissions;        
+        Object.keys(permissions).forEach((permissionKey) => {
+          //permissions are sorted based on priority, so single value permissions will be added only once - one with higher priority
+          if(!permissions_roles.hasOwnProperty(permissionKey) && !Array.isArray(permissions[permissionKey]) && permissions[permissionKey] != 'Default') {
+            console.log(permissions[permissionKey]);
+            permissions_roles[permissionKey] = permissions[permissionKey]
+          } else if(Array.isArray(permissions[permissionKey])) {
+            //assuming the permission is something like (AllowWorkunitScopeXXX, DenyWorkunitScopeXXX, AllowFileScopeXXX, or DenyFileScopeXXX) for HPCC
+            if(permissions_roles[permissionKey]) {              
+              permissions_roles[permissionKey] = [...permissions_roles[permissionKey], ...permissions[permissionKey]];
+              //remove duplicate scope patterns
+              const uniqueScopeValues = [...new Set(permissions_roles[permissionKey])];
+              permissions_roles[permissionKey] = uniqueScopeValues;
+            } else {
+              permissions_roles[permissionKey] = permissions[permissionKey];
+            }
+          }
+        })    
+      })      
+      resolve(permissions_roles);
+
+    }).catch(error => {
+      console.log(error);
+      reject(error);
+    })   
   })
-  
-  return permissions_roles;
+
 }
 
 router.post('/login', [  
@@ -96,10 +127,13 @@ router.post('/login', [
     payload.exp = Math.floor(Date.now() / 1000) + (60 * 15);
     payload.nonce = req.body.nonce;
 
+    let permissions = await populatePermissions(user, req.body.client_id);
+    console.log(permissions)
     let fullPayload = {
       ...payload,
-      ...populatePermissions(user)
+      ...permissions
     }
+
     var token = jwt.sign(fullPayload, privateKey, signOptions);
     //invalidate current refresh token
     RefreshToken.update({revoked:1, last_accessed: new Date()}, {where:{client_id: req.body.client_id}}).then(audit => {

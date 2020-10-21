@@ -11,10 +11,14 @@ module.exports = (sequelize, DataTypes) => {
     username: DataTypes.STRING,
     email: DataTypes.STRING,
     organization: DataTypes.STRING,
-    password: DataTypes.STRING
+    password: DataTypes.STRING,
+    employeeId: DataTypes.STRING,
+    type: DataTypes.STRING,
+    deletedAt: DataTypes.DATE
   }, {});
   User.associate = function(models) {
     models.User.belongsToMany(models.Role, { through: 'User_Roles', foreignKey: 'userId', onDelete: 'CASCADE'});
+    models.User.belongsToMany(models.Application, { through: 'User_Roles', foreignKey: 'userId', onDelete: 'CASCADE'});
     //models.User.belongsToMany(models.Role);
   };
   return User;

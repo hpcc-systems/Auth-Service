@@ -17,7 +17,7 @@ const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
 router.get('/all', function(req, res, next) {
   	User.findAll({
   		attributes: { exclude: ["password", "createdAt", "updatedAt"] },
-  		include:[{model: models.Role, attributes:{ exclude: ["createdAt", "updatedAt"]}, include: [{model:models.Permission, attributes:{ exclude: ["createdAt", "updatedAt"]}}, {model:models.Application, attributes:{ exclude: ["createdAt", "updatedAt"]}}] }]
+  		include:[{model: models.Role, attributes:{ exclude: ["createdAt", "updatedAt"]}}]
   	}).then(function(users) {
 	    res.json(users);
 	})
@@ -36,26 +36,26 @@ router.get('/roles', function(req, res, next) {
 });
 
 router.get('/permissions', function(req, res, next) {
-    Permission.findAll().then(function(permissions) {
-        res.json(permissions);
-    })
-    .catch(function(err) {
-        console.log(err);
-    });
+  Permission.findAll().then(function(permissions) {
+      res.json(permissions);
+  })
+  .catch(function(err) {
+      console.log(err);
+  });
 });
 
 
-router.post('/delete', (req, res) => {
-    console.log("[delete/read.js] - delete job = " + req.body.id);
-    User.destroy(
-        {where:{"id": req.body.id}, include: [{model:Role}]}
-    ).then(function(deleted) {
-        UserRoles.destroy({where: {userId: req.body.id}}).then(function(deleted) {
-        	res.json({"result":"success"});
-        });
-    }).catch(function(err) {
-        console.log(err);
-    });
+router.delete('/delete', (req, res) => {
+  console.log("[delete/read.js] - delete job = " + req.query.id);
+  User.destroy(
+      {where:{"id": req.query.id}, include: [{model:Role}]}
+  ).then(function(deleted) {
+      UserRoles.destroy({where: {userId: req.query.id}}).then(function(deleted) {
+      	res.json({"result":"success"});
+      });
+  }).catch(function(err) {
+      console.log(err);
+  });
 });
 
 router.post('/user', [
@@ -69,65 +69,91 @@ router.post('/user', [
     .isEmail().withMessage('Invalid Email Address'),
   body('organization').optional({checkFalsy:true})
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),        
-  body('password').optional({checkFalsy:true}).isLength({ min: 4 })  
+  body('password').optional({checkFalsy:true}).isLength({ min: 4 }),
+  body('employeeId')
+    .matches(/^[a-zA-Z0-9_.-]*$/).withMessage('Invalid Employee Id')
 ], (req, res) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-    var fieldsToUpdate={}, hash;
-    try {
-    	if (req.body.password) {
-	        hash = bcrypt.hashSync(req.body.password, 10);
-    	}
-        User.findOrCreate({
-          where: {username: req.body.username},
-          defaults: {
-          	"firstName": req.body.firstName,
-      			"lastName": req.body.lastName,
-      			"username": req.body.username,
-      			"password": hash,
-      			"email": req.body.email,
-      			"organization": req.body.organization
-          }
-        }).then(async function(result) {
-          //update scenario
-          if(!result[1]) {
-            fieldsToUpdate = {"firstName"  : req.body.firstName, "lastName" : req.body.lastName, "password": hash, "email" : req.body.email, "organization" : req.body.organization};
-            User.update(fieldsToUpdate, {where:{username:req.body.username}}).then(function(updateResult){
-            	return User.findOne({where: {username: req.body.username}, include: [{model:Role}]})
-            }).then(function(user) {
-            	//role changed?
-            	user.Roles.forEach((currentRole) => {
-            		user.removeRole(currentRole);
-            	});
-              //get the new role and add it to user
-              Role.findAll({where: {"id":{[Op.in]:req.body.role.split(',')}}}).then(function(roles) {
-                roles.forEach((role) => {
-                  result[0].addRole(role).then((roleAdded) => {
+  var fieldsToUpdate={}, hash, promises = [];
+  try {
+  	if (req.body.password) {
+        hash = bcrypt.hashSync(req.body.password, 10);
+  	}
+    User.findOrCreate({
+      where: {username: req.body.username},
+      defaults: {
+      	"firstName": req.body.firstName,
+  			"lastName": req.body.lastName,
+  			"username": req.body.username,
+  			"password": hash,
+  			"email": req.body.email,
+  			"organization": req.body.organization,
+        "employeeId": req.body.employeeId,
+        "type": req.body.type
+      }
+    }).then(async function(result) {
+      let user = result[0];
+      //update scenario
+      if(!result[1]) {
+        fieldsToUpdate = {
+          "firstName"  : req.body.firstName, 
+          "lastName" : req.body.lastName, 
+          "password": hash, 
+          "email" : req.body.email, 
+          "organization" : req.body.organization,
+          "employeeId" : req.body.employeeId,
+          "type": req.body.type
+        };
+        User.update(fieldsToUpdate, {where:{username:req.body.username}}).then(function(updateResult){
+        	return User.findOne({where: {username: req.body.username}, include: [{model:Role}]})
+        }).then(function(user) {
+        	
+          //role changed?
+          UserRoles.destroy({where:{userId:user.id}}).then();
+          req.body.appRoles.forEach((appRole) => {
+            promises.push(
+              UserRoles.create({
+                'userId': user.id,
+                'roleId': appRole.roleId,
+                'applicationId': appRole.appId,
+                'priority': appRole.priority
+              })
+             )
+          })
 
-                  });
-                });
-                res.json({"result":"success"});
-              })                    
-            });
-          } else {
-          	//new user
-            Role.findAll({where: {"id":{[Op.in]:req.body.role.split(',')}}}).then(function(roles) {
-              roles.forEach((role) => {
-                result[0].addRole(role).then((roleAdded) => {                            
-                });
-              });
-              res.json({"result":"success"});
+          Promise.all(promises).then(() => {
+            console.log("user_roles updated....")   
+            res.json({"result":"success"});            
+          });
+        });
+      } else {
+      	//new user
+        req.body.appRoles.forEach((appRole) => {
+          promises.push(
+            UserRoles.create({
+              'userId': user.id,
+              'roleId': appRole.roleId,
+              'applicationId': appRole.appId,
+              'priority': appRole.priority
             })
-          }
+           )
+        })
 
-        }), function(err) {
-            return res.status(500).send(err);
-        }
-    } catch (err) {
-        console.log('err', err);
+        Promise.all(promises).then(() => {
+          console.log("user_roles added....")   
+          res.json({"result":"success"});            
+        });
+      }
+
+    }), function(err) {
+        return res.status(500).send(err);
     }
+  } catch (err) {
+      console.log('err', err);
+  }
 });
 
 router.post('/changepwd', [
@@ -178,12 +204,12 @@ router.post('/signout', (req, res) => {
 });
 
 router.get('/details', function(req, res, next) {
-  User.findAll({where:{
-    "username": {
-      [Op.in]: req.query.usernames.split(',')
-    }
-  }}).then(function(users) {
-      res.json(users);
+  User.findOne({where:{
+    "id": req.query.id
+  }, 
+  attributes: { exclude: ["password", "createdAt", "updatedAt"] }, 
+  include:[{model: models.Role, attributes:{ exclude: ["createdAt", "updatedAt"]}}, {model: models.Application, attributes:{ exclude: ["createdAt", "updatedAt"]}}]}).then(function(user) {
+    res.json(user);
   })
   .catch(function(err) {
       console.log(err);
