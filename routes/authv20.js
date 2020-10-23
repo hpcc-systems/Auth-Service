@@ -58,7 +58,7 @@ let validateUser = (username, password) => {
 
 let populatePermissions = (user, clientId) => {  
   return new Promise((resolve, reject) => {
-    const query = "select r.Permissions from Users u, User_Roles ur, Application ap, roles r " +
+    const query = "select r.Permissions from Users u, User_Roles ur, Application ap, Roles r " +
       "where u.username = (:username) and u.deletedAt is null " +
       "and ap.clientId = (:clientId) and ap.deletedAt is null "+
       "and ur.applicationId=ap.id and ur.deletedAt is null "+
@@ -174,8 +174,8 @@ router.post('/tokenrefresh', [
         where: {
           username: token.username
         },
-        include:[{model: models.Role, include: [models.Permission] }]
-      }).then(user => {
+        include:[{model: models.Role }]
+      }).then(async user => {
         let newRefreshToken = bcrypt.genSaltSync(10);  
         let username = user.username;
         //payload.refresh_token = newRefreshToken;
@@ -184,9 +184,10 @@ router.post('/tokenrefresh', [
         payload.iat = Math.floor(Date.now() / 1000);
         payload.exp = Math.floor(Date.now() / 1000) + (60 * 15);    
         //payload.nonce = req.body.nonce;
+        let permissions = await populatePermissions(user, req.body.client_id);
         let fullPayload = {
           ...payload,
-          ...populatePermissions(user)
+          ...permissions
         }
 
         var token = jwt.sign(fullPayload, privateKey, signOptions);
