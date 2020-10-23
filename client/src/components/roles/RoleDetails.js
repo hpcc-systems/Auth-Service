@@ -5,6 +5,8 @@ import { Breadcrumb } from 'antd';
 import { Constants } from '../common/Constants';
 import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
+import { authHeader } from "../common/AuthHeader.js"
+
 const { TabPane } = Tabs;
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -47,7 +49,7 @@ function RoleDetails() {
 
   const getPermissionTemplate = (appType) => {
   	fetch("/api/roles/permissions?applicationType="+appType, {
-        //headers: authHeader()
+      headers: authHeader()
     })
     .then((response) => {
       if(response.ok) {
@@ -87,7 +89,7 @@ function RoleDetails() {
 
   const getRoleDetails = (roleId) => {
   	fetch("/api/roles?id="+roleId, {
-        //headers: authHeader()
+      headers: authHeader()
     })
     .then((response) => {
       if(response.ok) {
@@ -132,10 +134,7 @@ function RoleDetails() {
 		console.log(JSON.stringify(postObj))
     fetch('/api/roles', {
       method: (!postObj.id || postObj.id == '') ? 'post' : 'put',
-      //headers: authHeader(),
-      headers: { 
-        "Content-type": "application/json; charset=UTF-8"
-      }, 
+      headers: authHeader(),
       body: JSON.stringify(postObj)
     }).then(function(response) {
       if(response.ok) {

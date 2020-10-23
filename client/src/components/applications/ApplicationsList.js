@@ -5,6 +5,7 @@ import { getColumnSearchProps } from '../common/TablesConfig';
 import { EditOutlined, DeleteOutlined, FileAddOutlined  } from '@ant-design/icons';
 import ApplicationDetailsDialog from './ApplicationDetailsDialog';
 import useModal from '../../hooks/useModal';
+import { authHeader } from "../common/AuthHeader.js"
 
 function ApplicationsList() {
   const {isShowing, toggle} = useModal();
@@ -17,7 +18,7 @@ function ApplicationsList() {
 
   const fetchApplications = () => {
   	fetch("/api/application/all", {
-      //headers: authHeader()
+      headers: authHeader()
     })
     .then((response) => {
       if(response.ok) {
@@ -39,10 +40,7 @@ function ApplicationsList() {
 	const handleDelete = (id) => {
 		fetch('/api/application?id='+id, {
       method: 'delete',
-      //headers: authHeader(),
-      headers: { 
-        "Content-type": "application/json; charset=UTF-8"
-      }
+      headers: authHeader(),
     }).then(function(response) {
       if(response.ok) {
         return response.json();

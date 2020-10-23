@@ -7,6 +7,7 @@ import { useHistory } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { roleActions } from '../../redux/actions/Role';
 import { EditOutlined, DeleteOutlined, FileAddOutlined, DownOutlined } from '@ant-design/icons';
+import { authHeader } from "../common/AuthHeader.js"
 
 function RolesList() {
 	let history = useHistory();	
@@ -20,7 +21,7 @@ function RolesList() {
 
   const getRoleList = () => {
   	fetch("/api/roles/all", {
-        //headers: authHeader()
+      headers: authHeader()
     })
     .then((response) => {
       if(response.ok) {
@@ -46,10 +47,7 @@ function RolesList() {
 	const handleDelete = (record) => {
 		fetch('/api/roles?id='+record.id, {
       method: 'delete',
-      //headers: authHeader(),
-      headers: { 
-        "Content-type": "application/json; charset=UTF-8"
-      }
+      headers: authHeader()
     }).then(function(response) {
       if(response.ok) {
         return response.json();

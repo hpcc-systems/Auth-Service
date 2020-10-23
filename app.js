@@ -12,6 +12,7 @@ var authRouter = require('./routes/auth');
 var uiRouter = require('./routes/ui');
 var appRouter = require('./routes/application');
 var authV20Router = require('./routes/authv20');
+var roleRouter = require('./routes/roles');
 
 var app = express();
 
@@ -27,12 +28,14 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/login', loginRouter);
-app.use('/users', withAuth, usersRouter);
-app.use('/auth/v20', authV20Router);
-app.use('/auth', authRouter);
+app.use('/api/users', withAuth, usersRouter);
+app.use('/api/auth/v20', authV20Router);
+app.use('/api/auth', authRouter);
 app.use('/admin', withAuth, uiRouter);
-app.use('/', withAuth, indexRouter);
-app.use('/application', withAuth, appRouter); 
+//app.use('/', withAuth, indexRouter);
+app.use('/api/application', withAuth, appRouter); 
+
+app.use('/api/roles', withAuth, roleRouter)
 
 
 // catch 404 and forward to error handler

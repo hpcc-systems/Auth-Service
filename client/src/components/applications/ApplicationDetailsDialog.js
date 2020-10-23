@@ -3,8 +3,10 @@ import { Form, Input, Button, Select, Tooltip, Modal, message } from 'antd';
 import { SearchOutlined, PlusOutlined, MinusCircleOutlined  } from '@ant-design/icons';
 import { Breadcrumb } from 'antd';
 import { Constants } from '../common/Constants';
+import { authHeader } from "../common/AuthHeader.js"
 const Option = Select.Option;
 const { TextArea } = Input;
+
 
 const layout = {
   labelCol: { span: 4 },
@@ -33,10 +35,7 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
   const handleOk = () => {
     fetch('/api/application', {
       method: applicationDetails.id == '' ? 'post' : 'put',
-      //headers: authHeader(),
-      headers: { 
-        "Content-type": "application/json; charset=UTF-8"
-      }, 
+      headers: authHeader(),
       body: JSON.stringify(applicationDetails)
     }).then(function(response) {
       if(response.ok) {
@@ -54,10 +53,7 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
   const fetchApplicationDetails = () => {
     fetch('/api/application?id='+selectedApplicationId, {
       method: 'get',
-      //headers: authHeader(),
-      headers: { 
-        "Content-type": "application/json; charset=UTF-8"
-      }
+      headers: authHeader(),
     }).then(function(response) {
       if(response.ok) {
         return response.json();

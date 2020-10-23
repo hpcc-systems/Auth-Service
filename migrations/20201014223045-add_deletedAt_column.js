@@ -14,6 +14,7 @@ module.exports = {
       'clientId', Sequelize.STRING, {
          after: 'application_id'
       }
+     )
     ]);
   },
 

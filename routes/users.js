@@ -60,9 +60,9 @@ router.delete('/delete', (req, res) => {
 
 router.post('/user', [
   body('firstName')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid First Name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid First Name'),
   body('lastName').optional({checkFalsy:true})
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Last Name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid Last Name'),
   body('username')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
   body('email').optional({checkFalsy:true})

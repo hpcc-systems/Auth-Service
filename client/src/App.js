@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Layout, Menu, Dropdown, Button } from 'antd';
 import { createBrowserHistory } from 'history'
-import { BrowserRouter as Router, Link, Route, Switch, useLocation, NavLink } from 'react-router-dom';
+import { BrowserRouter as Router, Link, Route, Switch, useLocation, NavLink, Redirect  } from 'react-router-dom';
 import {
   DesktopOutlined,
   TrademarkCircleFilled,
@@ -111,7 +111,7 @@ function App({props}) {
               <Footer style={{ textAlign: 'center' }}></Footer>
             </Layout>
           </Layout>
-        : null}  
+        : <Redirect from="*" to="/login" />}  
     </Router>    
   );
 }

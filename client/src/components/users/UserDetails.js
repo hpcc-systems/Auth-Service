@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 import { sortableContainer, sortableElement, sortableHandle } from 'react-sortable-hoc';
 import arrayMove from 'array-move';
 import { useHistory } from "react-router-dom";
+import { authHeader } from "../common/AuthHeader.js"
 
 const Option = Select.Option;
 const { TextArea } = Input;
@@ -50,7 +51,7 @@ function UserDetails() {
 
 	const getUserDetails = (userId) => {
   	fetch("/api/users/details?id="+userId, {
-        //headers: authHeader()
+      headers: authHeader()
     })
     .then((response) => {
       if(response.ok) {
@@ -105,10 +106,7 @@ function UserDetails() {
     }
     fetch('/api/users/user', {
       method: postObj.id == '' ? 'post' : 'post',
-      //headers: authHeader(),
-      headers: { 
-        "Content-type": "application/json; charset=UTF-8"
-      }, 
+      headers: authHeader(),
       body: JSON.stringify(postObj)
     }).then(function(response) {
       if(response.ok) {
@@ -125,7 +123,7 @@ function UserDetails() {
   
   const getApplications = () => {
   	fetch("/api/application/all", {
-      //headers: authHeader()
+     	headers: authHeader()
     })
     .then((response) => {
       if(response.ok) {
@@ -141,7 +139,7 @@ function UserDetails() {
 
   const getRoles = () => {
   	fetch("/api/roles/all", {
-        //headers: authHeader()
+      headers: authHeader()
     })
     .then((response) => {
       if(response.ok) {
@@ -205,7 +203,7 @@ function UserDetails() {
 
   const addApplicationRole = () => {
   	let appRolesNew = {
-  		priority: appRoles.length,
+  		priority: appRoles.length + 1,
   		appId: applicationsData.value.key,
   		appName: applicationsData.value.label,
   		roleId: rolesData.value.key,
@@ -225,7 +223,7 @@ function UserDetails() {
     if (oldIndex !== newIndex) {
       let newData = arrayMove([].concat(appRoles), oldIndex, newIndex).filter(el => !!el);
       newData = newData.map((data, idx) => {
-      	data.priority = idx;
+      	data.priority = idx + 1;
       	return data;
       })
       console.log('Sorted items: ', newData);
@@ -270,6 +268,12 @@ function UserDetails() {
     key: 'roleName',
     ...getColumnSearchProps('applicationType'),
     dataIndex: 'roleName',
+  },
+  {
+    title: 'Priority',
+    key: 'priority',
+    ...getColumnSearchProps('priority'),
+    dataIndex: 'priority',
   },
   {
     title: 'Action',
@@ -434,6 +438,7 @@ function UserDetails() {
 	      	dataSource={appRoles} 
 	      	columns={columns} 
 	      	rowKey="priority"
+	      	title={() => 'Roles are processed in priority order; the lower the number, the higher the priority. To change the priority of roles within an application, re-arrange the rows by dragging and moving them.'}
 	        components={{
 	          body: {
 	            wrapper: DraggableContainer,

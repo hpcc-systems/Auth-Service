@@ -6,6 +6,7 @@ import { EditOutlined, DeleteOutlined, FileAddOutlined } from '@ant-design/icons
 import { useHistory } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { userActions } from '../../redux/actions/User';
+import { authHeader } from "../common/AuthHeader.js"
 
 function UsersList() {
 	let history = useHistory();	
@@ -19,7 +20,7 @@ function UsersList() {
 
   const getUserList = () => {
   	fetch("/api/users/all", {
-        //headers: authHeader()
+      headers: authHeader()
     })
     .then((response) => {
       if(response.ok) {
@@ -52,10 +53,7 @@ function UsersList() {
 	const handleDelete = (record) => {
 		fetch('/api/users/delete?id='+record.id, {
       method: 'delete',
-      //headers: authHeader(),
-      headers: { 
-        "Content-type": "application/json; charset=UTF-8"
-      }
+      headers: authHeader(),
     }).then(function(response) {
       if(response.ok) {
         return response.json();

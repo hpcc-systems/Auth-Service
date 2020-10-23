@@ -3,11 +3,13 @@ var fs = require('fs');
 const path = require("path");
 
 const withAuth = function(req, res, next) {
-  const token =
-    req.cookies.auth;
+  let token = req.headers['x-access-token'] || req.headers['authorization'];  
   if (!token) {
-     res.redirect('/login');
+     res.status(401).json({message: "Un-Authorized."})    
   } else {
+    if (token.startsWith('Bearer ')) {
+      token = token.slice(7, token.length);
+    }
     var verifyOptions = {
      expiresIn:  "12h",
      algorithms:  "RS256"
@@ -19,7 +21,7 @@ const withAuth = function(req, res, next) {
     try {
       var verified = jwt.verify(token, publicKey, verifyOptions);
     }catch(err) {
-      res.redirect('login');
+      res.status(401).json({message: "Un-Authorized."})    
     }
     next();
   }
