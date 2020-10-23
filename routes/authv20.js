@@ -58,7 +58,7 @@ let validateUser = (username, password) => {
 
 let populatePermissions = (user, clientId) => {  
   return new Promise((resolve, reject) => {
-    const query = "select r.Permissions from Users u, User_Roles ur, Application ap, Roles r " +
+    const query = "select r.permissions from Users u, User_Roles ur, Application ap, Roles r " +
       "where u.username = (:username) and u.deletedAt is null " +
       "and ap.clientId = (:clientId) and ap.deletedAt is null "+
       "and ur.applicationId=ap.id and ur.deletedAt is null "+

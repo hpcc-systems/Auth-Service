@@ -157,31 +157,37 @@ router.post('/registerUser', [
       //update scenario
       if(!result[1]) {
         let missingRoleFound = false;
-        let roles = await Role.findAll({where: {"applicationId": req.body.applicationId, "name":req.body.role}})          
+        let roles = await Role.findOne({where: {"name":req.body.role}})          
         console.log('roles found: '+roles.length);
-        roles.map((role) => {
-          if(result[0].Roles.filter(userRole => userRole.id == role.id).length == 0) {
-            missingRoleFound = true;
-            promises.push(result[0].addRole(role));
+        UserRoles.findOrCreate({
+          where: {userId: result[0].id, roleId:roles.id, applicationId: req.body.applicationId},
+          defaults: {
+            "userId": result[0].id,
+            "roleId": roles.id,  
+            "applicationId": req.body.applicationId,
+            "priority": 1
           }
-        });
-        if(!missingRoleFound) {
-          return res.status(500).json({ error: 'There is already a user account associated with this user name' });
-        }
-        Promise.all(promises).then(() => {
-          res.status(202).json({"success":"true"});             
-        });
+        }).then((result) => {
+          if(!result[1]) {
+            return res.status(500).json({ error: 'There is already a user account associated with this user name' });  
+          } else {
+            Promise.all(promises).then(() => {
+              res.status(202).json({"success":"true"});             
+            });
+          }
+        })
     } else {  
-        //new user
-        Role.findAll({where: {"name":req.body.role}}).then(function(roles) {
-          roles.forEach((role) => {
-            promises.push(result[0].addRole(role))
-          });          
-        })   
-        Promise.all(promises).then(() => {
-          res.status(201).json({"success":"true"});
-        });             
-      }  
+      let roles = await Role.findOne({where: {"name":req.body.role}})          
+      UserRoles.create({
+        "userId": result[0].id,
+        "roleId": roles.id,  
+        "applicationId": req.body.applicationId,
+        "priority": 1
+      }).then
+      Promise.all(promises).then(() => {
+        res.status(201).json({"success":"true"});
+      });             
+    }  
     }), function(err) {
         return res.status(500).send(err);
     }
