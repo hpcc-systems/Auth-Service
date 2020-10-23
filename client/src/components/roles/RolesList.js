@@ -7,7 +7,7 @@ import { useHistory } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { roleActions } from '../../redux/actions/Role';
 import { EditOutlined, DeleteOutlined, FileAddOutlined, DownOutlined } from '@ant-design/icons';
-import { authHeader } from "../common/AuthHeader.js"
+import { authHeader, handleErrors } from "../common/AuthHeader.js"
 
 function RolesList() {
 	let history = useHistory();	
@@ -23,11 +23,7 @@ function RolesList() {
   	fetch("/api/roles/all", {
       headers: authHeader()
     })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }        
-    })
+    .then(handleErrors)
     .then(data => {
       setData(data);      
     }).catch(error => {
@@ -48,16 +44,15 @@ function RolesList() {
 		fetch('/api/roles?id='+record.id, {
       method: 'delete',
       headers: authHeader()
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
-      } else {
-        message.error("There was an error deleting the Role")
-      }
-    }).then(function(data) {
+    })
+		.then(handleErrors)
+    .then(function(data) {
       message.success("Role has been deleted")
       getRoleList();
-    });
+    }).catch(error => {
+      console.log(error);
+      message.error("There was an error deleting the Role")
+    });	
 	}
 
 	const handleMenuClick = (e) => {

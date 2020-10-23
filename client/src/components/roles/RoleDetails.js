@@ -5,7 +5,7 @@ import { Breadcrumb } from 'antd';
 import { Constants } from '../common/Constants';
 import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { authHeader } from "../common/AuthHeader.js"
+import { authHeader, handleErrors } from "../common/AuthHeader.js"
 
 const { TabPane } = Tabs;
 const { Title, Paragraph } = Typography;
@@ -51,11 +51,7 @@ function RoleDetails() {
   	fetch("/api/roles/permissions?applicationType="+appType, {
       headers: authHeader()
     })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }        
-    })
+    .then(handleErrors)
     .then(data => {
       let initialValues = [];
       setData(data);
@@ -91,12 +87,8 @@ function RoleDetails() {
   	fetch("/api/roles?id="+roleId, {
       headers: authHeader()
     })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }        
-    })
-    .then(data => {
+		.then(handleErrors)
+		.then(data => {
       setRoleDetails(data);
       form.setFieldsValue({
       	applicationType: data.applicationType,
@@ -131,21 +123,19 @@ function RoleDetails() {
     	}
     })
 		postObj.permissions = permissions;
-		console.log(JSON.stringify(postObj))
     fetch('/api/roles', {
       method: (!postObj.id || postObj.id == '') ? 'post' : 'put',
       headers: authHeader(),
       body: JSON.stringify(postObj)
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
-      } else {
-        message.error("There was an error saving the Role")
-      }
-    }).then(function(data) {
+    })
+		.then(handleErrors)
+    .then(function(data) {
       message.success("Role has been saved successfully")
       history.push('/roles')
-    });
+    }).catch(error => {
+      console.log(error);
+      message.error("There was an error saving the role")
+    });	
   };
 
   const onTabChange = key => {
@@ -200,7 +190,7 @@ function RoleDetails() {
 				        label="Role Name"
 				        name="rolename"
 				        required
-				        rules={[{ required: true, message: 'Please enter role name!' }]}
+				        rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/), message: 'Please enter role name!' }]}
 				      >
 				        <Input style={{"width": "400px"}}/>
 				      </Form.Item>
@@ -208,7 +198,7 @@ function RoleDetails() {
 				        label="Managed By"
 				        name="managedby"
 				        required
-				        rules={[{ required: true, message: 'Please enter managed by information!' }]}
+				        rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9@\._-]*$/), message: 'Please enter managed by information!' }]}
 				      >
 				        <Input style={{"width": "400px"}}/>
 				      </Form.Item>

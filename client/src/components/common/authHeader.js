@@ -12,3 +12,16 @@ export function authHeader() {
         return {};
     }
 }
+
+export async function handleErrors(response) {
+	let responseData = await response.json();
+  if (!response.ok) {
+    if(response.status == 422) {
+    	let errMessage = responseData.errors.map(error => error.msg);
+    	throw Error(errMessage);	
+    } else {
+    	throw Error(response.statusText);	
+    }    
+  }
+  return responseData;
+}

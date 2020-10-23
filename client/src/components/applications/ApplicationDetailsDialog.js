@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Button, Select, Tooltip, Modal, message } from 'antd';
+import { Form, Input, Button, Select, Tooltip, Modal, message, Alert } from 'antd';
 import { SearchOutlined, PlusOutlined, MinusCircleOutlined  } from '@ant-design/icons';
 import { Breadcrumb } from 'antd';
 import { Constants } from '../common/Constants';
-import { authHeader } from "../common/AuthHeader.js"
+import { authHeader, handleErrors } from "../common/AuthHeader.js"
 const Option = Select.Option;
 const { TextArea } = Input;
 
@@ -23,7 +23,7 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
     email: '',
     description: ''
   });	
-	const [form] = Form.useForm();	
+	const [form] = Form.useForm();	  
 
   useEffect(() => {       
     resetForm();
@@ -37,16 +37,15 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
       method: applicationDetails.id == '' ? 'post' : 'put',
       headers: authHeader(),
       body: JSON.stringify(applicationDetails)
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
-      } else {
-        message.error("There was an error saving the Application")
-      }
-    }).then(function(data) {
+    })
+    .then(handleErrors)
+    .then(function(response) {
       message.success("Application has been saved successfully")
       onClose();
       resetForm();
+    }).catch(function(error) {
+      console.log(error);
+      message.error("There was an error saving the Application: "+error);      
     });
   }  
 
@@ -54,13 +53,10 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
     fetch('/api/application?id='+selectedApplicationId, {
       method: 'get',
       headers: authHeader(),
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
-      } else {
-        message.error("There was an error retrieving the details of the application")
-      }
-    }).then(function(applicationData) {
+    })
+    .then(handleErrors)
+    .then(function(applicationData) {
+      console.log(applicationData)
       setApplicationDetails({
         id: applicationData.id,
         name: applicationData.applicationType,
@@ -137,7 +133,7 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
             <Form.Item
               label="Name"
               name="name"
-              rules={[{ required: true, message: 'Please enter application name!' }]}
+              rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/), message: 'Please enter a valid name!.' }]}
             >
               <Input id="name" name="name" placeholder="Name" onChange={onChange}  value={applicationDetails.name}/>
             </Form.Item>
@@ -156,7 +152,7 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
               label="Client Id"
               name="clientId"
               required
-              rules={[{ required: true, message: 'Please enter a client id!' }]}
+              rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/), message: 'Please enter a valid client id!' }]}
             >
               <Input id="clientId" name="clientId" onChange={onChange} placeholder="Client Id" value={applicationDetails.clientId}/>
             </Form.Item>
@@ -164,7 +160,7 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
               label="Owner"
               name="owner"
               required
-              rules={[{ required: true, message: 'Please enter owner!' }]}
+              rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/), message: 'Please enter a valid owner!' }]}
             >
               <Input id="owner" name="owner" onChange={onChange} placeholder="Owner" value={applicationDetails.owner}/>
             </Form.Item>
@@ -172,13 +168,23 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
               label="Email"
               name="email"
               required
-              rules={[{ required: true, message: 'Please enter valid email address!' }]}
+              rules={[
+              {
+                type: 'email',
+                message: 'The input is not valid E-mail!',
+              },
+              {
+                required: true,
+                message: 'Please input E-mail!'
+              },
+            ]}
             >
               <Input id="email" name="email" onChange={onChange} placeholder="Email" value={applicationDetails.email}/>
             </Form.Item>
             <Form.Item
               label="Description"
               name="description"
+
             >
               <TextArea rows={4} style={{"width": "400px"}} id="description" name="description" onChange={onChange} value={applicationDetails.description}/>
             </Form.Item>

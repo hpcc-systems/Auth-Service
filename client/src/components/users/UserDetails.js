@@ -8,7 +8,7 @@ import { useSelector } from "react-redux";
 import { sortableContainer, sortableElement, sortableHandle } from 'react-sortable-hoc';
 import arrayMove from 'array-move';
 import { useHistory } from "react-router-dom";
-import { authHeader } from "../common/AuthHeader.js"
+import { authHeader, handleErrors } from "../common/AuthHeader.js"
 
 const Option = Select.Option;
 const { TextArea } = Input;
@@ -36,28 +36,31 @@ function UserDetails() {
 	const SortableContainer = sortableContainer(props => <tbody {...props} />);
 
 	let user = userReducer.user;
-	let lastFetchId;
-
-	useEffect(() => {		
-		if(user && user.userId != '') {
-			getUserDetails(user.userId)	
-		}
-  }, [user])
+	let lastFetchId;	
 	
 	useEffect(() => {		
 		getApplications();
 		getRoles();	
   }, [])
 
+  useEffect(() => {				
+		console.log(user)
+		if(!user) {
+			console.log('redirecting');
+			history.push('/users');
+		}
+
+		if(user && user.userId != '') {
+			getUserDetails(user.userId)	
+		} 
+
+  }, [user])
+
 	const getUserDetails = (userId) => {
   	fetch("/api/users/details?id="+userId, {
       headers: authHeader()
     })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }        
-    })
+    .then(handleErrors)    
     .then(data => {
     	let appRole=[], appRoleObj={};
     	setUserDetails(data);
@@ -108,28 +111,23 @@ function UserDetails() {
       method: postObj.id == '' ? 'post' : 'post',
       headers: authHeader(),
       body: JSON.stringify(postObj)
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
-      } else {
-        message.error("There was an error saving the Role")
-      }
-    }).then(function(data) {
-      message.success("Role has been saved successfully")
+    })
+    .then(handleErrors)
+		.then(function(data) {
+      message.success("User has been saved successfully")
       resetForm();
       history.push("/users");
-    });
+    }).catch(error => {
+      console.log(error);
+      message.error("There was an error saving the User")
+    });	
   };  
   
   const getApplications = () => {
   	fetch("/api/application/all", {
      	headers: authHeader()
     })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }        
-    })
+    .then(handleErrors)    
     .then(data => {
       setApplications(data);
     }).catch(error => {
@@ -141,11 +139,7 @@ function UserDetails() {
   	fetch("/api/roles/all", {
       headers: authHeader()
     })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }        
-    })
+    .then(handleErrors)
     .then(data => {
       setRoles(data);      
     }).catch(error => {

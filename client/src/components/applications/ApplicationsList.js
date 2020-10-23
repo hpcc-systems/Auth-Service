@@ -5,7 +5,7 @@ import { getColumnSearchProps } from '../common/TablesConfig';
 import { EditOutlined, DeleteOutlined, FileAddOutlined  } from '@ant-design/icons';
 import ApplicationDetailsDialog from './ApplicationDetailsDialog';
 import useModal from '../../hooks/useModal';
-import { authHeader } from "../common/AuthHeader.js"
+import { authHeader, handleErrors } from "../common/AuthHeader.js"
 
 function ApplicationsList() {
   const {isShowing, toggle} = useModal();
@@ -20,11 +20,7 @@ function ApplicationsList() {
   	fetch("/api/application/all", {
       headers: authHeader()
     })
-    .then((response) => {
-      if(response.ok) {
-        return response.json();
-      }        
-    })
+    .then(handleErrors)
     .then(data => {
       setData(data);
     }).catch(error => {
@@ -41,16 +37,15 @@ function ApplicationsList() {
 		fetch('/api/application?id='+id, {
       method: 'delete',
       headers: authHeader(),
-    }).then(function(response) {
-      if(response.ok) {
-        return response.json();
-      } else {
-        message.error("There was an error deleting the Application")
-      }
-    }).then(function(data) {
+    })
+    .then(handleErrors)
+    .then(function(data) {
       message.success("Application has been deleted")
       fetchApplications();
-    });
+    }).catch(error => {
+      console.log(error);
+      message.error("There was an error deleting the Application")      
+    });		
 	}
 
 	const handleClose = () => {
