@@ -19,9 +19,9 @@ router.get('/permissions', function(req, res, next) {
 
 router.post('/', [
   body('name')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Role Name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid Role Name'),
   body('managedBy')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Managed By')    
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid Managed By')    
 ], (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

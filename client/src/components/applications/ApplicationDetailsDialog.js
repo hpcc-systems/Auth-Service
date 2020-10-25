@@ -56,7 +56,6 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
     })
     .then(handleErrors)
     .then(function(applicationData) {
-      console.log(applicationData)
       setApplicationDetails({
         id: applicationData.id,
         name: applicationData.applicationType,
@@ -133,7 +132,7 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
             <Form.Item
               label="Name"
               name="name"
-              rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/), message: 'Please enter a valid name!.' }]}
+              rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/), message: 'Please enter a valid name!.' }]}
             >
               <Input id="name" name="name" placeholder="Name" onChange={onChange}  value={applicationDetails.name}/>
             </Form.Item>
@@ -152,7 +151,7 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
               label="Client Id"
               name="clientId"
               required
-              rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/), message: 'Please enter a valid client id!' }]}
+              rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/), message: 'Please enter a valid client id!' }]}
             >
               <Input id="clientId" name="clientId" onChange={onChange} placeholder="Client Id" value={applicationDetails.clientId}/>
             </Form.Item>
@@ -160,7 +159,7 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
               label="Owner"
               name="owner"
               required
-              rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/), message: 'Please enter a valid owner!' }]}
+              rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/), message: 'Please enter a valid owner!' }]}
             >
               <Input id="owner" name="owner" onChange={onChange} placeholder="Owner" value={applicationDetails.owner}/>
             </Form.Item>

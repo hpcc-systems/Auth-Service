@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Button, Select, Tooltip, Row, Col, Typography, Spin, Popconfirm, Table, Divider, message } from 'antd';
+import { Form, Input, Button, Select, Tooltip, Row, Col, Typography, Spin, Popconfirm, Table, Divider, message, Modal } from 'antd';
 import { SearchOutlined, PlusOutlined, DeleteOutlined, MenuOutlined  } from '@ant-design/icons';
 import { Breadcrumb } from 'antd';
 import { Constants } from '../common/Constants';
@@ -9,6 +9,7 @@ import { sortableContainer, sortableElement, sortableHandle } from 'react-sortab
 import arrayMove from 'array-move';
 import { useHistory } from "react-router-dom";
 import { authHeader, handleErrors } from "../common/AuthHeader.js"
+import ReactJson from 'react-json-view'
 
 const Option = Select.Option;
 const { TextArea } = Input;
@@ -28,6 +29,11 @@ function UserDetails() {
 	const [roles, setRoles] = useState([]);
 	const [appRoles, setAppRoles] = useState([]);	
 	const [userDetails, setUserDetails] = useState([]);	
+	const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+	const [selectedRows, setSelectedRows] = useState([]);
+	const [isSelected, setIsSelected] = useState(false);
+	const [previewDialogVisible, setPreviewDialogVisible] = useState(false);
+	const [permissionsPreviewContent, setPermissionsPreviewContent] = useState({});
 	const userReducer = useSelector(state => state.userReducer);	
 	const DragHandle = sortableHandle(() => (
 	  <MenuOutlined style={{ cursor: 'pointer', color: '#999' }} />
@@ -51,10 +57,10 @@ function UserDetails() {
 		}
 
 		if(user && user.userId != '') {
-			getUserDetails(user.userId)	
+			getUserDetails(user.userId)				
 		} 
 
-  }, [user])
+  }, [user])  
 
 	const getUserDetails = (userId) => {
   	fetch("/api/users/details?id="+userId, {
@@ -204,14 +210,24 @@ function UserDetails() {
   		roleName: rolesData.value.label  		
   	};
   	let newData = [...appRoles, appRolesNew];
-  	setAppRoles(newData);
-  	handleRoleChange('');
-  	handleApplicationChange('')
+  	let duplicateAppRole = appRoles.filter(appRole => appRole.appId == applicationsData.value.key && appRole.roleId == rolesData.value.key);
+  	if(duplicateAppRole && duplicateAppRole.length > 0) {
+  		message.error("Application and Role already added for this user. Please select a different Application/Role");
+  	} else {
+	  	setAppRoles(newData);
+	  	handleRoleChange('');
+	  	handleApplicationChange('')
+
+  	}
   }
 
   const resetForm = () => {
   	form.resetFields();
   }  
+
+  const handlePreviewClose = () => {
+  	setPreviewDialogVisible(false);
+  }
 
   const onSortEnd = ({ oldIndex, newIndex }) => {
     if (oldIndex !== newIndex) {
@@ -230,6 +246,56 @@ function UserDetails() {
     const priority = appRoles.findIndex(x => x.priority === restProps['data-row-key']);
     return <SortableItem index={priority} {...restProps} />;
   };  
+
+  const onSelectChange = (selectedRowKeys, selectedRows) => {
+  	console.log(selectedRows)
+    setSelectedRowKeys(selectedRowKeys);    
+    setSelectedRows(selectedRows);    
+    if(selectedRowKeys && selectedRowKeys.length > 1) {
+    	setIsSelected(true);
+    } else {
+    	setIsSelected(false);
+    }
+  };
+
+	const rowSelection = {
+    selectedRowKeys,
+    onChange: onSelectChange,
+  }
+
+  const showPreview = () => {
+  	console.log(selectedRows)
+  	let appId='', foundDifferentApp = false, roleIds=[];
+  	selectedRows.forEach((selectedRow) => {
+  		roleIds.push(selectedRow.roleId);
+  		if(!appId == '') {
+  			if(appId != selectedRow.appId)	{
+					foundDifferentApp = true;
+					return;
+  			}  			
+  		};
+  		appId = selectedRow.appId;
+  	})
+
+  	console.log(foundDifferentApp)
+  	if(foundDifferentApp) {
+  		//message.error("Please select Roles of the same application to Preview the permissions.")
+  	} else {  
+	  	let url = '/api/auth/v20/previewPermissions?roleIds='+roleIds.join(',');
+	  	fetch(url, {
+	      headers: authHeader()
+	    })
+	    .then(handleErrors)
+	    .then(data => {
+	      setPermissionsPreviewContent(data.permissions);
+	      setPreviewDialogVisible(true);
+
+	    }).catch(error => {
+	      console.log(error);
+	    });		
+	 	}	 		
+  }
+
 
   const DraggableContainer = props => (
     <SortableContainer
@@ -280,7 +346,7 @@ function UserDetails() {
       </span>
   }];  
 
-  return (
+  return (    
   	<React.Fragment>
 	  	<Breadcrumb className="bread-crumb">
 	      <Breadcrumb.Item>User Details</Breadcrumb.Item>
@@ -428,19 +494,41 @@ function UserDetails() {
 		    	<Divider type="horizontal" />      	
         </Row>      
 
-	      <Table 
-	      	dataSource={appRoles} 
-	      	columns={columns} 
-	      	rowKey="priority"
-	      	title={() => 'Roles are processed in priority order; the lower the number, the higher the priority. To change the priority of roles within an application, re-arrange the rows by dragging and moving them.'}
-	        components={{
-	          body: {
-	            wrapper: DraggableContainer,
-	            row: DraggableBodyRow,
-	          },
-	        }}
-	      	/>
-	      
+	      <div>
+	        <div style={{ marginBottom: 16 }}>
+	          <Button type="primary" onClick={showPreview} disabled={!isSelected}>
+	            Preview
+	          </Button>
+	        </div>
+		      <Table 
+		      	rowSelection={rowSelection}
+		      	onChange={onSelectChange}
+		      	dataSource={appRoles} 
+		      	columns={columns} 
+		      	rowKey="priority"
+		      	title={() => 'Roles are processed in priority order; the lower the number, the higher the priority. To change the priority of roles within an application, re-arrange the rows by dragging and moving them.'}
+		        components={{
+		          body: {
+		            wrapper: DraggableContainer,
+		            row: DraggableBodyRow,
+		          },
+		        }}
+		      	/>
+      </div>
+
+      <Modal
+          title="Permissions Preview"
+          visible={previewDialogVisible}
+          onCancel={handlePreviewClose}
+          footer={[
+            <Button key="back" onClick={handlePreviewClose}>
+              Close
+            </Button>
+          ]}
+        >
+        <ReactJson src={permissionsPreviewContent} displayDataTypes={false}/>
+      </Modal>  
+
 	      <Row className="footer-buttons">
 	      	<Col style={{"padding-right": "10px"}}>  
 		        <Button htmlType="button">

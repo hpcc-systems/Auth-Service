@@ -16,13 +16,13 @@ const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
 
 router.post('/', [
   body('name')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Application Name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid Application Name'),
   body('email').optional({checkFalsy:true})
     .isEmail().withMessage('Invalid Email Address'),
   body('owner')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Owner Name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid Owner Name'),
   body('clientId')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Client Id'),    
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid Client Id'),    
 ], (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -47,13 +47,13 @@ router.post('/', [
 
 router.put('/', [
   body('name')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Application Name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid Application Name'),
   body('email').optional({checkFalsy:true})
     .isEmail().withMessage('Invalid Email Address'),
   body('owner')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Owner Name'),
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid Owner Name'),
   body('clientId')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Client Id'),    
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid Client Id'),    
 ], (req, res) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {

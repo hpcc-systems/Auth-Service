@@ -56,7 +56,33 @@ let validateUser = (username, password) => {
   })
 }
 
-let populatePermissions = (user, clientId) => {  
+let populatePermissions = (roles) => {
+  console.log(roles);
+  let permissions_roles = {};
+  roles.forEach((role) => {        
+    let permissions = role.permissions;        
+    Object.keys(permissions).forEach((permissionKey) => {
+      //permissions are sorted based on priority, so single value permissions will be added only once - one with higher priority
+      if(!permissions_roles.hasOwnProperty(permissionKey) && !Array.isArray(permissions[permissionKey]) && permissions[permissionKey] != 'Default') {
+        console.log(permissions[permissionKey]);
+        permissions_roles[permissionKey] = permissions[permissionKey]
+      } else if(Array.isArray(permissions[permissionKey])) {
+        //assuming the permission is something like (AllowWorkunitScopeXXX, DenyWorkunitScopeXXX, AllowFileScopeXXX, or DenyFileScopeXXX) for HPCC
+        if(permissions_roles[permissionKey]) {              
+          permissions_roles[permissionKey] = [...permissions_roles[permissionKey], ...permissions[permissionKey]];
+          //remove duplicate scope patterns
+          const uniqueScopeValues = [...new Set(permissions_roles[permissionKey])];
+          permissions_roles[permissionKey] = uniqueScopeValues;
+        } else {
+          permissions_roles[permissionKey] = permissions[permissionKey];
+        }
+      }
+    })    
+  })   
+  return permissions_roles;
+}
+
+let getPermissions = (user, clientId) => {  
   return new Promise((resolve, reject) => {
     const query = "select r.permissions from Users u, User_Roles ur, Application ap, Roles r " +
       "where u.username = (:username) and u.deletedAt is null " +
@@ -73,28 +99,7 @@ let populatePermissions = (user, clientId) => {
         //throw new Error('User Not Found.');
         reject("Invalid User!")
       }
-      console.log(roles);      
-      let permissions_roles = {};
-      roles.forEach((role) => {        
-        let permissions = role.permissions;        
-        Object.keys(permissions).forEach((permissionKey) => {
-          //permissions are sorted based on priority, so single value permissions will be added only once - one with higher priority
-          if(!permissions_roles.hasOwnProperty(permissionKey) && !Array.isArray(permissions[permissionKey]) && permissions[permissionKey] != 'Default') {
-            console.log(permissions[permissionKey]);
-            permissions_roles[permissionKey] = permissions[permissionKey]
-          } else if(Array.isArray(permissions[permissionKey])) {
-            //assuming the permission is something like (AllowWorkunitScopeXXX, DenyWorkunitScopeXXX, AllowFileScopeXXX, or DenyFileScopeXXX) for HPCC
-            if(permissions_roles[permissionKey]) {              
-              permissions_roles[permissionKey] = [...permissions_roles[permissionKey], ...permissions[permissionKey]];
-              //remove duplicate scope patterns
-              const uniqueScopeValues = [...new Set(permissions_roles[permissionKey])];
-              permissions_roles[permissionKey] = uniqueScopeValues;
-            } else {
-              permissions_roles[permissionKey] = permissions[permissionKey];
-            }
-          }
-        })    
-      })      
+      let permissions_roles = populatePermissions(roles);
       resolve(permissions_roles);
 
     }).catch(error => {
@@ -127,7 +132,7 @@ router.post('/login', [
     payload.exp = Math.floor(Date.now() / 1000) + (60 * 15);
     payload.nonce = req.body.nonce;
 
-    let permissions = await populatePermissions(user, req.body.client_id);
+    let permissions = await getPermissions(user, req.body.client_id);
     console.log(permissions)
     let fullPayload = {
       ...payload,
@@ -184,7 +189,7 @@ router.post('/tokenrefresh', [
         payload.iat = Math.floor(Date.now() / 1000);
         payload.exp = Math.floor(Date.now() / 1000) + (60 * 15);    
         //payload.nonce = req.body.nonce;
-        let permissions = await populatePermissions(user, req.body.client_id);
+        let permissions = await getPermissions(user, req.body.client_id);
         let fullPayload = {
           ...payload,
           ...permissions
@@ -225,6 +230,30 @@ router.post('/verify', function(req, res, next) {
 
     res.status(200).send({ verified: verified });
 
+  } catch(err) {
+    console.log('err', err);
+    res.status(500).send({'error': err});
+  }
+});
+
+router.get('/previewPermissions', function(req, res, next) {
+  try {
+    let roleIds = req.query.roleIds;
+    let query = 'select r.permissions from Roles r, User_Roles ur where r.id in (:roleIds) and ur.roleId=r.id order by ur.priority asc;'
+    models.sequelize.query(query, {
+      type: models.sequelize.QueryTypes.SELECT,
+      replacements: { roleIds: roleIds.split(',') }
+    }).then(roles => {
+
+      if (!roles) {
+        //throw new Error('User Not Found.');
+        reject("Invalid User!")
+      }    
+
+      let permissions_roles = populatePermissions(roles);
+      console.log(permissions_roles)
+      res.status(200).send({ permissions: permissions_roles });      
+    })   
   } catch(err) {
     console.log('err', err);
     res.status(500).send({'error': err});

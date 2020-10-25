@@ -190,7 +190,7 @@ function RoleDetails() {
 				        label="Role Name"
 				        name="rolename"
 				        required
-				        rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/), message: 'Please enter role name!' }]}
+				        rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/), message: 'Please enter role name!' }]}
 				      >
 				        <Input style={{"width": "400px"}}/>
 				      </Form.Item>
@@ -198,7 +198,7 @@ function RoleDetails() {
 				        label="Managed By"
 				        name="managedby"
 				        required
-				        rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9@\._-]*$/), message: 'Please enter managed by information!' }]}
+				        rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9@ \._-]*$/), message: 'Please enter managed by information!' }]}
 				      >
 				        <Input style={{"width": "400px"}}/>
 				      </Form.Item>
