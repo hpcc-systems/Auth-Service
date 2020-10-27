@@ -1,4 +1,5 @@
 import { message } from 'antd';
+import { authHeader} from "../components/common/AuthHeader.js"
 const login = (username, password) => {
   return new Promise((resolve, reject) => {
     fetch('/api/auth/login', {
@@ -25,6 +26,26 @@ const login = (username, password) => {
   })
 }  
 
+const verifyToken = () => {
+  console.log("verifToken")
+  return new Promise((resolve, reject) => {
+    fetch('/api/auth/verify', {
+      method: 'post',
+      headers: authHeader()      
+    }).then(function(response) {
+      if(response.ok) {
+        return response.json();
+      } else {
+        
+        reject("Login failed")
+      }
+    }).then(function(data) {
+      console.log(data);
+      resolve(data);
+    });
+  })
+}  
+
 const logout = () => {
   localStorage.removeItem("user");
   window.location = '/login';
@@ -33,4 +54,5 @@ const logout = () => {
 export default {
   login,
   logout,
+  verifyToken
 };

@@ -16,40 +16,25 @@ import UserDetails from "./components/users/UserDetails";
 import ApplicationsList from "./components/applications/ApplicationsList";
 import UsersList from "./components/users/UsersList";
 import Login from "./components/login/Login";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import jwt_decode from "jwt-decode";
+import  {authActions}  from './redux/actions/Auth';
 const { Header, Content, Footer, Sider } = Layout;
 
 function App({props}) {
+  const dispatch = useDispatch();
   const [collapsed, setCollapsed] = useState(false);
   const [user, setUser] = useState({});
-  const [selectedNav, setSelectedNav] = useState(['1']);
-  const { user: currentUser } = useSelector((state) => state.authReducer);
+  const { user: currentUser, isLoggedIn: isLoggedIn } = useSelector((state) => state.authReducer);
   let decoded = currentUser ? jwt_decode(currentUser.accessToken) : null;
-  let fullName = decoded ? decoded.firstName + " " + decoded.lastName : "";
-  //const location = useLocation();
-  
-  /*useEffect(() => {    
-    if(location) {
-      let nav=[];
-      console.log('pathname: '+location.pathname)
-      switch(location.pathname) {
-        case '/applications':
-          nav.push('1')
-          setSelectedNav(nav);
-          break;
-        case '/roles':
-          nav.push('2')
-          setSelectedNav(nav);
-          break;
-        case '/users':
-          nav.push('3')
-          setSelectedNav(nav);
-          break;
-      }    
-      console.log('selectedNav: '+selectedNav)  
+  let fullName = decoded ? decoded.firstName + " " + decoded.lastName : "";    
+
+  useEffect(() => {    
+    console.log("xxx");
+    if(isLoggedIn) {
+      dispatch(authActions.verifyToken())    
     }
-  }, [location])*/
+  }, [])
 
   const onCollapse = (collapsed) => {
     setCollapsed(collapsed)
@@ -66,6 +51,25 @@ function App({props}) {
     </Menu>
   );
 
+  const getSelectedNav = () => {
+    if(window.location.pathname) {
+      let nav='1';
+      switch(window.location.pathname) {
+        case '/':
+        case '/applications':
+          nav = '1'
+          break;
+        case '/roles':
+          nav = '2'
+          break;
+        case '/users':
+          nav = '3'
+          break;
+      }    
+      return [nav];
+    }
+  }
+
   return (
     <Router history={createBrowserHistory()}>
       <Route exact path="/login" component={Login} />
@@ -73,7 +77,7 @@ function App({props}) {
         <Layout style={{ minHeight: '100vh' }}>
             <Sider collapsible collapsed={collapsed} onCollapse={onCollapse}>
               <div className="logo">Auth Service</div>
-              <Menu theme="dark" defaultSelectedKeys={selectedNav} mode="inline">
+              <Menu theme="dark" defaultSelectedKeys={getSelectedNav()} mode="inline">
                 <Menu.Item key="1" icon={<DesktopOutlined />}>
                   <NavLink exact to={'/applications'}>Applications</NavLink>
                 </Menu.Item>

@@ -62,7 +62,7 @@ router.post('/login', [
 
       // SIGNING OPTIONS
       var signOptions = {
-       expiresIn:  "24h",
+       expiresIn:  120,
        algorithm:  "RS256"
       };
       console.log('payload: '+JSON.stringify(payload));
@@ -96,7 +96,7 @@ router.get('/getKey', function(req, res, next) {
 router.post('/verify', function(req, res, next) {
   try {
     var verifyOptions = {
-     expiresIn:  "24h",
+     expiresIn:  120,
      algorithms:  "RS256"
     };
 

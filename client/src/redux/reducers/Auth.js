@@ -10,7 +10,6 @@ export function authReducer (state = initialState, action) {
 
   switch (type) {
     case Constants.LOGIN_SUCCESS:
-    console.log('payload: '+payload);
       return {
         ...state,
         isLoggedIn: true,

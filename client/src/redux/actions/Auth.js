@@ -23,7 +23,20 @@ const logout = () => (dispatch) => {
   });
 };
 
+const verifyToken = () => (dispatch) => {
+  console.log("verifyToken")
+  AuthService.verifyToken().then((data) => {
+  }).catch(error => {
+  	console.log(error);  	
+  	AuthService.logout();
+	  dispatch({
+	    type: Constants.LOGOUT,
+	  });
+  })
+};
+
 export const authActions = {
   login,
-  logout    
+  logout,
+  verifyToken    
 };
