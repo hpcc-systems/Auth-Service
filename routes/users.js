@@ -25,7 +25,7 @@ router.get('/all', function(req, res, next) {
   	User.findAll({
   		attributes: { exclude: ["password", "updatedAt"] },
   		include:[{model: models.Role, attributes:{ exclude: ["createdAt", "updatedAt"]}}],
-      order: [['updatedAt', 'DESC']]
+      order: [['createdAt', 'DESC']]
   	}).then(function(users) {
 	    res.json(users);
 	})
