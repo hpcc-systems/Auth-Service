@@ -7,5 +7,6 @@ export const Constants = {
 	USER_TYPE: [
 		"Internal",
 		"External"
-	]
+	],
+	DATE_FORMAT_OPTIONS: { year: 'numeric', month: 'long', day: 'numeric' }
 }

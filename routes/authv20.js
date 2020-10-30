@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require("crypto");
 var fs = require('fs');
 const path = require("path");
 let models = require('../models');
@@ -27,7 +28,7 @@ let payload = {
   aud:'hpcc_systems_platform'  
 }
 
-let validateUser = (username, password) => {  
+let validateUser = (username, password, nonce) => {  
   return new Promise((resolve, reject) => {
     if(!username) {
       reject("Username required!")
@@ -44,12 +45,21 @@ let validateUser = (username, password) => {
         //throw new Error('User Not Found.');
         reject("Invalid User!")
       }
-
-      var passwordIsValid = bcrypt.compareSync(password, user.password);
+      //decode base64 to text before hashing
+      let passwordBuff = new Buffer(user.password);
+      let nonceBuff = Buffer.from(nonce);
+      let passwordNonce = Buffer.concat([passwordBuff, nonceBuff]);
+      //hash(stored hashed password + nonce)      
+      let concatenatedHash = crypto.createHash("sha256").update(passwordNonce).digest('base64')
+      //var passwordIsValid = bcrypt.compareSync(password, user.password);
+      var passwordIsValid = (password == concatenatedHash);
       if (!passwordIsValid) {
         //return res.status(401).send({ auth: false, accessToken: null, reason: "Invalid Password!" });
         //throw new Error("Invalid Password!")
-        reject("Invalid Password!")
+        let isBcryptPasswordValid = bcrypt.compareSync(password, user.password);
+        if(!isBcryptPasswordValid) {
+          reject("Invalid Password!")  
+        }        
       }
       resolve(user);    
     })   
@@ -95,9 +105,9 @@ let getPermissions = (user, clientId) => {
       replacements: { username: user.username, clientId: clientId }
     }).then(roles => {
 
-      if (!roles) {
+      if (!roles || roles.length == 0) {
         //throw new Error('User Not Found.');
-        reject("Invalid User!")
+        reject("Invalid input!")
       }
       let permissions_roles = populatePermissions(roles);
       resolve(permissions_roles);
@@ -123,7 +133,7 @@ router.post('/login', [
   }
   console.log('URL: '+req.protocol + '://' + req.get('host') + req.originalUrl);
   try {
-    let user = await validateUser(req.body.username, req.body.password);
+    let user = await validateUser(req.body.username, req.body.password, req.body.nonce);
     // PRIVATE  	
     let refreshToken = bcrypt.genSaltSync(10);  
     payload.iss = req.protocol + '://' + (req.get('host') || req.get('X-Forwarded-Host')) + req.originalUrl;

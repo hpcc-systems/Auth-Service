@@ -9,6 +9,7 @@
     "@sendgrid/mail": "^7.2.6",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.5",
+    "crypto": "^1.0.1",
     "debug": "~2.6.9",
     "dotenv": "^8.2.0",
     "ejs": "^2.7.4",

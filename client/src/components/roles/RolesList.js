@@ -8,6 +8,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { roleActions } from '../../redux/actions/Role';
 import { EditOutlined, DeleteOutlined, FileAddOutlined, DownOutlined } from '@ant-design/icons';
 import { authHeader, handleErrors } from "../common/AuthHeader.js"
+import { Constants } from '../common/Constants';
 
 function RolesList() {
 	let history = useHistory();	
@@ -94,7 +95,11 @@ function RolesList() {
   {
     title: 'Created',
     dataIndex: 'createdAt',
-    key: 'createdAt'
+    key: 'createdAt',
+    render: (text, record) => {
+      let createdAt = new Date(text);
+      return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+    }
   },
   {
 	  title: 'Action',

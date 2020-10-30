@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require("crypto");
 var fs = require('fs');
 const path = require("path");
 let models = require('../models');
@@ -19,6 +20,11 @@ const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   return `${location}[${param}]: ${msg}`;
 };
 
+let hashPassword = (password) => {
+  let salt = password.substring(0, 2);
+  console.log(salt); 
+  return crypto.createHash("sha256").update(salt+password).digest('base64');
+}
 
 /* GET users listing. */
 router.post('/login', [
@@ -41,10 +47,30 @@ router.post('/login', [
       throw new Error('User Not Found.');
     }
 
-    var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
+    //var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
+    //decode base64 to text before hashing
+    let passwordBuff = new Buffer(user.password);
+    //hash(stored hashed password + nonce)      
+    let passwordHash = crypto.createHash("sha256").update(passwordBuff).digest('base64')
+    let userProvidedPasswordHash = hashPassword(req.body.password)
+    var passwordIsValid = (userProvidedPasswordHash == user.password);
     if (!passwordIsValid) {
-      //return res.status(401).send({ auth: false, accessToken: null, reason: "Invalid Password!" });
-      throw new Error("Invalid Password!")
+      //Temperory: check if it is a bcrypt hashed password (old user accounts)
+      let bcryptPasswordIsValid = bcrypt.compareSync(req.body.password, user.password);
+      if(!bcryptPasswordIsValid) {
+        throw new Error("Invalid Password!")  
+      } else {
+        //found a valid bcrypt password, change it to the new sha256 salted password
+        let newShaPassword = hashPassword(req.body.password);
+        User.update(
+          { password: newShaPassword },
+          { where: {username:req.body.username}}
+        ).then(function (updated) {
+          console.log("sha password updated");
+        })
+      }
+      console.log('bcrypt password valid');
+      //return res.status(401).send({ auth: false, accessToken: null, reason: "Invalid Password!" });      
     }
     // PRIVATE
   	var privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/jwt_key'), 'utf8');

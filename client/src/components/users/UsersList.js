@@ -7,6 +7,7 @@ import { useHistory } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { userActions } from '../../redux/actions/User';
 import { authHeader, handleErrors } from "../common/AuthHeader.js"
+import { Constants } from '../common/Constants';
 
 function UsersList() {
 	let history = useHistory();	
@@ -52,7 +53,7 @@ function UsersList() {
     })
 		.then(handleErrors)
     .then(function(data) {
-      message.success("Role has been deleted")
+      message.success("User has been deleted")
       getUserList();
     }).catch(error => {
       console.log(error);
@@ -84,7 +85,11 @@ function UsersList() {
   {
     title: 'Created',
     dataIndex: 'createdAt',
-    key: 'createdAt'
+    key: 'createdAt',
+    render: (text, record) => {
+      let createdAt = new Date(text);
+      return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+    }
   },
   {
     title: 'Action',
