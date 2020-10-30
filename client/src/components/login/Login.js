@@ -9,14 +9,20 @@ function Login() {
   let history = useHistory();  
   const [form] = Form.useForm();  
   const dispatch = useDispatch();
+  
   const onFinish = (values) => {
     dispatch(authActions.login(values.username, values.password))
     .then(() => {
       history.push("/applications");    
       //window.location.reload(); 
     })
-    .catch(() => {
-      message.error("Login failed")
+    .catch((error) => {
+      console.log(error);
+      if(error == 'Insufficitent Privileges') {
+        message.error("Login failed - Insufficitent Privileges")
+      } else {
+        message.error("Login failed");
+      }
     });
   }
 
