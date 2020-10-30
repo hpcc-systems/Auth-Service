@@ -405,7 +405,8 @@ function UserDetails() {
 			          label="Password"
 			          name="password"
 			          required
-			          rules={[{ required: true, message: 'Please enter password!' }]}
+			          tooltip={<Tooltip><span>Password has to be atleast 4 characters long!.</span></Tooltip>}			          
+			          rules={[{ min: 4, message: 'Password has to be atleast 4 characters long!'}, { required: true, message: 'Please enter password!' }]}
 			        >
 			        	<Input type="password"/>
 			        </Form.Item>
@@ -415,7 +416,7 @@ function UserDetails() {
 			          label="Confirm Password"
 			          name="confirmPassword"		 
 			          required
-			          rules={[{ required: true, message: 'Please confirm password!' }]}         
+			          rules={[{ required: true, message: 'Please confirm password!' }, { min: 4, message: 'Password has to be atleast 4 characters long!' }]}         
 			        >
 			          <Input type="password"/>
 			        </Form.Item>

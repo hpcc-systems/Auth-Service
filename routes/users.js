@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 const bcrypt = require('bcryptjs');
+const crypto = require("crypto");
 let Sequelize = require('sequelize');
 let models = require('../models');
 let User = models.User;
@@ -13,11 +14,18 @@ const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   return `${location}[${param}]: ${msg}`;
 };
 
+let hashPassword = (password) => {
+  let salt = password.substring(0,2);
+  console.log(salt); 
+  return crypto.createHash("sha256").update(salt+password).digest('base64');
+}
+
 /* GET users listing. */
 router.get('/all', function(req, res, next) {
   	User.findAll({
-  		attributes: { exclude: ["password", "createdAt", "updatedAt"] },
-  		include:[{model: models.Role, attributes:{ exclude: ["createdAt", "updatedAt"]}}]
+  		attributes: { exclude: ["password", "updatedAt"] },
+  		include:[{model: models.Role, attributes:{ exclude: ["createdAt", "updatedAt"]}}],
+      order: [['updatedAt', 'DESC']]
   	}).then(function(users) {
 	    res.json(users);
 	})
@@ -80,7 +88,9 @@ router.post('/user', [
   var fieldsToUpdate={}, hash, promises = [];
   try {
   	if (req.body.password) {
-        hash = bcrypt.hashSync(req.body.password, 10);
+      //hash = crypto.createHash("sha256").update(req.body.password).digest('base64');
+      hash = hashPassword(req.body.password);
+        //hash = bcrypt.hashSync(req.body.password, 10);
   	}
     User.findOrCreate({
       where: {username: req.body.username},
@@ -184,7 +194,8 @@ router.post('/changepwd', [
     }
 
     if(req.body.newpassword == req.body.confirmpassword) {
-    	let updatedhash = bcrypt.hashSync(req.body.newpassword, 10);
+    	//let updatedhash = bcrypt.hashSync(req.body.newpassword, 10);
+      let updatedhash = hashPassword(req.body.newpassword);
     	User.update(
 	    	{ password: updatedhash },
 	    	{ where: {username:req.body.username}}

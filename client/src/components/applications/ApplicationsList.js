@@ -6,6 +6,7 @@ import { EditOutlined, DeleteOutlined, FileAddOutlined  } from '@ant-design/icon
 import ApplicationDetailsDialog from './ApplicationDetailsDialog';
 import useModal from '../../hooks/useModal';
 import { authHeader, handleErrors } from "../common/AuthHeader.js"
+import { Constants } from '../common/Constants';
 
 function ApplicationsList() {
   const {isShowing, toggle} = useModal();
@@ -87,7 +88,11 @@ function ApplicationsList() {
   {
     title: 'Created',
     dataIndex: 'createdAt',
-    key: 'createdAt'
+    key: 'createdAt',
+    render: (text, record) => {
+      let createdAt = new Date(text);
+      return createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +' @ '+ createdAt.toLocaleTimeString('en-US') 
+    }
   },
   {
     title: 'Action',
