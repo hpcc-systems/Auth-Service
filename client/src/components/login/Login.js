@@ -19,6 +19,7 @@ function Login() {
     .catch((error) => {
       console.log(error);
       if(error == 'Insufficitent Privileges') {
+        localStorage.removeItem("user");
         message.error("Login failed - Insufficitent Privileges")
       } else {
         message.error("Login failed");
