@@ -5,10 +5,11 @@ A JWT token based authentication service. Tokens are signed and verified via key
 1. Clone the repository
 2. Create a Private/Public key pairs and store them under /keys directory (/keys directory needs to be created). 
 3. Rename .env.sample to .env.
-   a) Provide the database details in .env file
-   b) Provide key names and modify Ports if required
-   c) For SSL, provide cert path   
-4. run docker-compose up -d   
+  a) Provide the database details in .env file
+  b) Provide Private/Public key names and modify Ports if required
+  c) For SSL, provide cert path   
+4. Modify client/nginx/nginx.conf file with ssl cert names and server names.    
+4. Run docker-compose up -d   
 5. The user interface to manage users should be available at http(s)://<hostname>:<WEB_EXPOSED_PORT> once the application starts up succesfully. 
 
 ### Development Setup:
