@@ -2,7 +2,7 @@ version: "3"
 services:
   node:
     restart: always
-    entrypoint: [sh, ./docker-entry.sh, "auth_mysql_db", "${DB_PORT}"]
+    entrypoint: [./docker-entry.sh, "auth_mysql_db", "3306"]
     build:
       context: .
       dockerfile: Dockerfile
@@ -22,7 +22,7 @@ services:
     volumes:
       - ./mysql-data:/var/lib/mysql
     ports:
-      - ${DB_PORT}:${DB_PORT}
+      - ${DB_PORT}:3306
     environment:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -45,7 +45,7 @@ services:
       - ${WEB_PORT}:${WEB_PORT}
       - ${WEB_EXPOSED_PORT}:${WEB_EXPOSED_PORT}
     volumes:
-      - ${CERT_PATH}:${CERT_PATH}
+      - ${CERT_PATH}:/etc/ssl/certs
     depends_on:
       - auth_mysql_db    
 
