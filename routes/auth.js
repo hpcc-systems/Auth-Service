@@ -73,7 +73,7 @@ router.post('/login', [
       //return res.status(401).send({ auth: false, accessToken: null, reason: "Invalid Password!" });      
     }
     // PRIVATE
-  	var privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/jwt_key'), 'utf8');
+  	var privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/' + process.env["PRIVATE_KEY_NAME"]), 'utf8');
   	//Permissions.findAll({where: {id:user.Roles[0].permissions}, attributes: ['id','name'], raw: true}).then(permissions => {
       // PAYLOAD
       var payload = {
@@ -108,17 +108,6 @@ router.post('/login', [
   });
 });
 
-router.get('/getKey', function(req, res, next) {
-  // PRIVATE and PUBLIC key
-  try {
-    var publicKey  = fs.readFileSync(path.resolve(__dirname, '../keys/jwt_converted_key.pub'), 'utf8');
-    res.status(200).send({ alg: "RS256", key : publicKey, kid: "xZsbbaPkDTV7RQUtoqJl" });
-  } catch(err) {
-    console.log('err', err);
-    res.status(500).send('Error -> ' + err);
-  };
-});
-
 router.post('/verify', function(req, res, next) {
   try {
     var verifyOptions = {
@@ -127,7 +116,7 @@ router.post('/verify', function(req, res, next) {
     };
 
     // PUBLIC key
-    var publicKey  = fs.readFileSync(path.resolve(__dirname, '../keys/jwt_converted_key.pub'), 'utf8');
+    var publicKey  = fs.readFileSync(path.resolve(__dirname, '../keys/'+process.env["PUBLIC_KEY_NAME"]), 'utf8');
 
     let token = req.headers['x-access-token'] || req.headers['authorization'];
     console.log('token-1 '+token)

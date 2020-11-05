@@ -13,7 +13,7 @@ let Permissions = models.Permission;
 let Audit = models.Audit;
 let Application = models.Application;
 let RefreshToken = models.Refreshtoken;
-const privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/jwt_key'), 'utf8');
+const privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/'+process.env["PRIVATE_KEY_NAME"]), 'utf8');
 const { body, query, check, validationResult } = require('express-validator');
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {    
   return `${location}[${param}]: ${msg}`;
@@ -227,7 +227,7 @@ router.post('/verify', function(req, res, next) {
     };
 
     // PUBLIC key
-    var publicKey  = fs.readFileSync(path.resolve(__dirname, '../keys/jwt_converted_key.pub'), 'utf8');
+    var publicKey  = fs.readFileSync(path.resolve(__dirname, '../keys/'+process.env["PUBLIC_KEY_NAME"]), 'utf8');
 
     let token = req.headers['x-access-token'] || req.headers['authorization'];
     //console.log('token-1 '+token)
