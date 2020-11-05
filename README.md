@@ -1,7 +1,7 @@
 # Auth-Service
 
 A JWT token based authentication service. Tokens are signed and verified via key pairs. This service provides a UI to manage the users as well as API's to generate/verify tokens.   
-
+### Docker Setup:
 1. Clone the repository
 2. Create a Private/Public key pairs and store them under /keys directory (/keys directory needs to be created). 
 3. Rename .env.sample to .env.
@@ -11,7 +11,7 @@ A JWT token based authentication service. Tokens are signed and verified via key
 4. run docker-compose up -d   
 5. The user interface to manage users should be available at http(s)://<hostname>:<WEB_EXPOSED_PORT> once the application starts up succesfully. 
 
-# Development Setup:
+### Development Setup:
 1. Follow steps 1-3
 2. run npm install under root
 3. Run app.js (nodemon app.js)
