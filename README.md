@@ -5,10 +5,10 @@ A JWT token based authentication service. Tokens are signed and verified via key
 1. Clone the repository
 2. Create a Private/Public key pairs and store them under /keys directory (/keys directory needs to be created). 
 3. Rename .env.sample to .env.
-   a) Provide the database details in .env file
-   b) Provide key names and modify Ports if required
-   c) For SSL, provide cert path   
-4. run docker-compose up -d   
+    a. Provide the database details in .env file
+    b. Provide key names and modify Ports if required
+    c. For SSL, provide cert path
+4. Run docker-compose up -d   
 5. The user interface to manage users should be available at http(s)://<hostname>:<WEB_EXPOSED_PORT> once the application starts up succesfully. 
 
 ### Development Setup:
@@ -17,7 +17,4 @@ A JWT token based authentication service. Tokens are signed and verified via key
 3. Run app.js (nodemon app.js)
 4. run npm install under /client
 5. run npm start /client
-6. The user interface to manage users should be available at http(s)://<hostname>:3003 once the application starts up succesfully. 
-  
-
-
+6. The user interface to manage users should be available at http(s)://<hostname>:<Port> once the application starts up succesfully. 
