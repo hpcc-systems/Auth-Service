@@ -4,7 +4,6 @@ const path = require("path");
 
 const withAuth = function(req, res, next) {
   let token = req.headers['x-access-token'] || req.headers['authorization'] || req.cookies.auth;  
-  console.log("xxx: "+token)
   if (!token) {
      res.status(401).json({message: "Un-Authorized."})    
   } else {
@@ -12,12 +11,12 @@ const withAuth = function(req, res, next) {
       token = token.slice(7, token.length);
     }
     var verifyOptions = {
-     expiresIn:  "12h",
+     expiresIn:  "24h",
      algorithms:  "RS256"
     };
 
     // PUBLIC key
-    var publicKey  = fs.readFileSync(path.resolve(__dirname, './keys/jwt_converted_key.pub'), 'utf8');
+    var publicKey  = fs.readFileSync(path.resolve(__dirname, './keys/'+process.env["PUBLIC_KEY_NAME"]), 'utf8');
 
     try {
       var verified = jwt.verify(token, publicKey, verifyOptions);
