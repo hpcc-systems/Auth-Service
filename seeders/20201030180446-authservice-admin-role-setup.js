@@ -41,12 +41,8 @@ module.exports = {
   },
 
   down: (queryInterface, Sequelize) => {
-    /*
-      Add reverting commands here.
-      Return a promise to correctly handle asynchronicity.
-
-      Example:
-      return queryInterface.bulkDelete('People', null, {});
-    */
+    return Promise.all([ queryInterface.bulkDelete('Application', null, {}),
+      queryInterface.bulkDelete('Roles', null, {}),
+      queryInterface.bulkDelete('User_Roles', null, {})]);
   }
 };

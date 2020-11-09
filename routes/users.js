@@ -188,10 +188,19 @@ router.post('/changepwd', [
       return res.status(500).send('User Not Found.');
     }
 
-    var passwordIsValid = bcrypt.compareSync(req.body.oldpassword, user.password);
+
+    let passwordBuff = new Buffer(user.password);
+    //hash(stored hashed password + nonce)      
+    let passwordHash = crypto.createHash("sha256").update(passwordBuff).digest('base64')
+    let userProvidedPasswordHash = hashPassword(req.body.oldpassword)
+    var passwordIsValid = (userProvidedPasswordHash == user.password);
     if (!passwordIsValid) {
-      return res.status(401).send({reason: "Invalid Password!" });
-    }
+      //Temperory: check if it is a bcrypt hashed password (old user accounts)
+      let bcryptPasswordIsValid = bcrypt.compareSync(req.body.oldpassword, user.password);
+      if(!bcryptPasswordIsValid) {
+        throw new Error("Invalid Password!")  
+      } 
+    }    
 
     if(req.body.newpassword == req.body.confirmpassword) {
     	//let updatedhash = bcrypt.hashSync(req.body.newpassword, 10);
