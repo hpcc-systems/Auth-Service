@@ -8,13 +8,15 @@ A JWT token based authentication service. Tokens are signed and verified via key
     a. Provide the database details in .env file
     b. Provide key names and modify Ports if required
     c. For SSL, provide cert path
-4. Run docker-compose up -d   
-5. The user interface to manage users should be available at http(s)://<hostname>:<WEB_EXPOSED_PORT> once the application starts up succesfully. 
+4. Provide admin account info in /seeders/20190806174641-admin-user.js file    
+5. Run docker-compose up -d   
+6. The user interface to manage users should be available at http(s)://<hostname>:<WEB_EXPOSED_PORT> once the application starts up succesfully. 
 
 ### Development Setup:
-1. Follow steps 1-3
+1. Follow steps 1-4
 2. run npm install under root
-3. Run app.js (nodemon app.js)
-4. run npm install under /client
-5. run npm start /client
-6. The user interface to manage users should be available at http(s)://<hostname>:<Port> once the application starts up succesfully. 
+3. run npx sequelize-cli db:migrate from root directory to create database schema
+4. Run app.js (nodemon app.js)
+5. run npm install under /client
+6. run npm start /client
+7. The user interface to manage users should be available at http(s)://<hostname>:<Port> once the application starts up succesfully. 
