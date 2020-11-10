@@ -57,20 +57,22 @@ function RoleDetails() {
       setData(data);
       if(data) {
       	let fields = [];
-      	Object.keys(data[0].permissions).forEach((permissionKey, idx) => {
-      		//console.log(data[0].permissions[permissionKey][Object.keys(data[0].permissions[permissionKey])[0]]);
-      		let radioFeilds = data[0].permissions[permissionKey][Object.keys(data[0].permissions[permissionKey])[0]].filter(permissionType => permissionType.field_type == 'radio');
-      		//console.log(radioFeilds);
-      		fields = fields.concat(radioFeilds);
-      	})
-      	//console.log(fields);
-      	
-      	fields.forEach((radioField) => {
-      		let defaultValue = radioField.ui_values.filter(uiValue => uiValue.default == true);
-      		if(defaultValue && defaultValue.length > 0) {
-      			initialValues.push({[radioField.key]: defaultValue[0].value});
-      		}
-      	})
+      	if(data[0].permissions && data[0].permissions.length > 0) {
+	      	Object.keys(data[0].permissions).forEach((permissionKey, idx) => {
+	      		//console.log(data[0].permissions[permissionKey][Object.keys(data[0].permissions[permissionKey])[0]]);
+	      		let radioFeilds = data[0].permissions[permissionKey][Object.keys(data[0].permissions[permissionKey])[0]].filter(permissionType => permissionType.field_type == 'radio');
+	      		//console.log(radioFeilds);
+	      		fields = fields.concat(radioFeilds);
+	      	})
+	      	//console.log(fields);
+	      	
+	      	fields.forEach((radioField) => {
+	      		let defaultValue = radioField.ui_values.filter(uiValue => uiValue.default == true);
+	      		if(defaultValue && defaultValue.length > 0) {
+	      			initialValues.push({[radioField.key]: defaultValue[0].value});
+	      		}
+	      	})
+	      }
       }
       let obj = {
       	applicationType: appType			
@@ -181,7 +183,7 @@ function RoleDetails() {
 				        name="applicationType"				        
         				rules={[{ required: true, message: 'Please select an Application Type!' }]}
 				      >
-				    		<Select id="applicationType" name="applicationType" defaultValue={data[0].applicationType} placeholder="Application Type" style={{ width: 190 }} >
+				    		<Select id="applicationType" name="applicationType" placeholder="Application Type" style={{ width: 190 }} >
 		              {Constants.APPLICATION_TYPES.map(applicationType => <Option key={applicationType} value={applicationType}>{applicationType}</Option>)}
 		            </Select>
 		          </Form.Item>
