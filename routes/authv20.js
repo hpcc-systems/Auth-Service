@@ -45,11 +45,9 @@ let validateUser = (username, password, nonce) => {
         //throw new Error('User Not Found.');
         reject("Invalid User!")
       }
-      //decode base64 to text before hashing
-      let passwordBuff = new Buffer(user.password);
+      let passwordBase64DecodedBuff = Buffer.from(user.password, 'base64');  
       let nonceBuff = Buffer.from(nonce);
-      let passwordNonce = Buffer.concat([passwordBuff, nonceBuff]);
-      //hash(stored hashed password + nonce)      
+      let passwordNonce = Buffer.concat([passwordBase64DecodedBuff, nonceBuff]);
       let concatenatedHash = crypto.createHash("sha256").update(passwordNonce).digest('base64')
       //var passwordIsValid = bcrypt.compareSync(password, user.password);
       var passwordIsValid = (password == concatenatedHash);
@@ -67,14 +65,13 @@ let validateUser = (username, password, nonce) => {
 }
 
 let populatePermissions = (roles) => {
-  console.log(roles);
   let permissions_roles = {};
   roles.forEach((role) => {        
     let permissions = role.permissions;        
     Object.keys(permissions).forEach((permissionKey) => {
       //permissions are sorted based on priority, so single value permissions will be added only once - one with higher priority
       if(!permissions_roles.hasOwnProperty(permissionKey) && !Array.isArray(permissions[permissionKey]) && permissions[permissionKey] != 'Default') {
-        console.log(permissions[permissionKey]);
+        //console.log(permissions[permissionKey]);
         permissions_roles[permissionKey] = permissions[permissionKey]
       } else if(Array.isArray(permissions[permissionKey])) {
         //assuming the permission is something like (AllowWorkunitScopeXXX, DenyWorkunitScopeXXX, AllowFileScopeXXX, or DenyFileScopeXXX) for HPCC
@@ -98,7 +95,7 @@ let getPermissions = (user, clientId) => {
       "where u.username = (:username) and u.deletedAt is null " +
       "and ap.clientId = (:clientId) and ap.deletedAt is null "+
       "and ur.applicationId=ap.id and ur.deletedAt is null "+
-      "and ur.roleId=r.id and r.deletedAt is null order by ur.priority asc; "
+      "and ur.roleId=r.id and r.deletedAt is null and ur.userId=u.id order by ur.priority asc; "
       
     models.sequelize.query(query, {
       type: models.sequelize.QueryTypes.SELECT,
@@ -136,7 +133,8 @@ router.post('/login', [
     let user = await validateUser(req.body.username, req.body.password, req.body.nonce);
     // PRIVATE  	
     let refreshToken = bcrypt.genSaltSync(10);  
-    payload.iss = req.protocol + '://' + (req.get('host') || req.get('X-Forwarded-Host')) + req.originalUrl;
+    payload.iss = process.env["HOST_PORT"] + req.originalUrl;
+    payload.aud = req.body.client_id;
     payload.sub = user.username;
     payload.iat = Math.floor(Date.now() / 1000);
     payload.exp = Math.floor(Date.now() / 1000) + (60 * 15);
@@ -194,7 +192,8 @@ router.post('/tokenrefresh', [
         let newRefreshToken = bcrypt.genSaltSync(10);  
         let username = user.username;
         //payload.refresh_token = newRefreshToken;
-        payload.iss = req.protocol + '://' + (req.get('host') || req.get('X-Forwarded-Host')) + req.originalUrl;
+        payload.iss = process.env["HOST_PORT"] + req.originalUrl;
+        payload.aud = req.body.client_id;
         payload.sub = user.username;
         payload.iat = Math.floor(Date.now() / 1000);
         payload.exp = Math.floor(Date.now() / 1000) + (60 * 15);    

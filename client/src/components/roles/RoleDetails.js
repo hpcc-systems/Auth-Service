@@ -100,6 +100,7 @@ function RoleDetails() {
       	...data.permissions
       })
       console.log(data)
+      console.log(form.getFieldsValue())
 
     }).catch(error => {
       console.log(error);
