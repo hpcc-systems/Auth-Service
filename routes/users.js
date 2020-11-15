@@ -188,7 +188,6 @@ router.post('/changepwd', [
       return res.status(500).send('User Not Found.');
     }
 
-
     let passwordBuff = new Buffer(user.password);
     //hash(stored hashed password + nonce)      
     let passwordHash = crypto.createHash("sha256").update(passwordBuff).digest('base64')
@@ -214,6 +213,38 @@ router.post('/changepwd', [
     } else {
     	return res.status(500).send({reason: 'Passwords does not match.'});
     }
+ });
+
+});
+
+router.post('/resetpwd', [
+  body('username')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),       
+  body('newpassword').isLength({ min: 4 }).withMessage('Invalid New Password')
+], (req, res) => {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    //return res.status(422).json({ success: false, errors: errors.array() });
+    return res.status(422).send({ success: false, errors: errors.array() });
+  }
+
+  User.findOne({
+    where: {
+      username: req.body.username
+    },
+    include: [{model:Role}]
+  }).then(user => {
+    if (!user) {
+      return res.status(500).send('User Not Found.');
+    }
+
+    let userProvidedPasswordHash = hashPassword(req.body.newpassword);
+    User.update(
+      { password: userProvidedPasswordHash },
+      { where: {username:req.body.username}}
+    ).then(function (updated) {
+      res.json({"result":"success"});
+    })
  });
 
 });

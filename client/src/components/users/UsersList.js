@@ -2,17 +2,21 @@ import React, { useState, useEffect } from 'react'
 import { getColumnSearchProps } from '../common/TablesConfig';
 import { Table, Tooltip, Divider, Popconfirm, Button, message } from 'antd';
 import { Breadcrumb } from 'antd';
-import { EditOutlined, DeleteOutlined, FileAddOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, FileAddOutlined, KeyOutlined } from '@ant-design/icons';
 import { useHistory } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { userActions } from '../../redux/actions/User';
 import { authHeader, handleErrors } from "../common/AuthHeader.js"
 import { Constants } from '../common/Constants';
+import ChangePasswordDialog from './ResetPassword';
+import useModal from '../../hooks/useModal';
 
 function UsersList() {
 	let history = useHistory();	
 	const dispatch = useDispatch();
 	const [data, setData] = useState([]);
+  const [username, setUsername] = useState([]);
+  const {isShowing, toggle} = useModal();
 	
 	useEffect(() => {		
 		getUserList()	
@@ -39,12 +43,21 @@ function UsersList() {
 		history.push("/user/details");
 	}
 
+  const handleChangePassword = (record) => {
+    setUsername(record.username)
+    toggle();
+  }
+
 	const handleAdd = () => {
 		dispatch(userActions.userSelected(
     	''
     ));
 		history.push("/user/details");
 	}
+
+  const handleClose = () => {
+    toggle();
+  }
 
 	const handleDelete = (record) => {
 		fetch('/api/users/delete?id='+record.id, {
@@ -98,9 +111,11 @@ function UsersList() {
       <span>
         <a href="#" onClick={(row) => handleEdit(record)}><Tooltip placement="right" title={"View Details"}><EditOutlined /></Tooltip></a>
         <Divider type="vertical" />
-          <Popconfirm title="Are you sure you want to delete this user?" onConfirm={() => handleDelete(record)}> 
-            <a href="#"><Tooltip placement="right" title={"Delete User"}><DeleteOutlined /></Tooltip></a>
-          </Popconfirm>
+        <a href="#" onClick={(row) => handleChangePassword(record)}><Tooltip placement="right" title={"Change Password"}><KeyOutlined /></Tooltip></a>
+        <Divider type="vertical" />
+        <Popconfirm title="Are you sure you want to delete this user?" onConfirm={() => handleDelete(record)}> 
+          <a href="#"><Tooltip placement="right" title={"Delete User"}><DeleteOutlined /></Tooltip></a>
+        </Popconfirm>
       </span>
   }  
 ];
@@ -114,6 +129,7 @@ function UsersList() {
       		<Button className="add-button" icon={<FileAddOutlined />} onClick={handleAdd}>Add</Button>
     		</Tooltip>
 	  	<Table dataSource={data} columns={columns} rowKey={"id"}/>
+      <ChangePasswordDialog isShowing={isShowing} onClose={handleClose} username={username}/>
     </React.Fragment>
 	  )  
 }

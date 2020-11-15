@@ -14,15 +14,18 @@ module.exports = {
         "name": "ECL Watch",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
+            "displayValue": "View",
             "value": "Read",
             "description": ""
           }
@@ -35,20 +38,24 @@ module.exports = {
         "name": "Topology",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
-            "value": "Topo",
+            "displayValue": "Topo",
+            "value": "Read",
             "description": "Read cluster topology"
           },
           {
-            "value": "Logs",
+            "displayValue": "Logs",
+            "value": "Full",
             "description": "Read process logs"
           }
         ],
@@ -60,15 +67,18 @@ module.exports = {
         "name": "Machine info",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
+            "displayValue": "View",
             "value": "Read",
             "description": "Access machine/preflight info"
           }
@@ -81,15 +91,18 @@ module.exports = {
         "name": "Dfu_Exceptions",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
+            "displayValue": "Read",
             "value": "Read",
             "description": "Read DFU exceptions"
           }
@@ -102,25 +115,88 @@ module.exports = {
         "name": "Ws_Store",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
+            "displayValue": "Read",
             "value": "Read",
             "description": "List stores"
           },
           {
+            "displayValue": "Write",
             "value": "Write",
             "description": "Update key/value pairs in stores"
           },
           {
+            "displayValue": "Full",
             "value": "Full",
             "description": "Delete keys, delete namespaces, fetch metadata, create stores"
+          }
+        ],
+        "field_type": "radio",
+        "description": ""
+      },
+      {
+        "key": "WsELKAccess",
+        "name": "Ws_Elk",
+        "ui_values": [
+          {
+            "displayValue": "Default",
+            "value": "Default",
+            "description": ""
+          },
+          {
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
+          },
+          {
+            "displayValue": "Access",
+            "value": "Access",
+            "description": "Access to ELK integration service"
+          },
+          {
+            "displayValue": "Config",
+            "value": "Read",
+            "description": "Read the ELK configuration"
+          }
+        ],
+        "field_type": "radio",
+        "description": ""
+      },
+      {
+        "key": "CodeSignAccess",
+        "name": "Code_Sign",
+        "ui_values": [
+          {
+            "displayValue": "Default",
+            "value": "Default",
+            "description": ""
+          },
+          {
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
+          },
+          {
+            "displayValue": "Read",
+            "value": "Read",
+            "description": "Access to code signing service ListUserIDs"
+          },
+          {
+            "displayValue": "Sign",
+            "value": "Full",
+            "description": "Ability to sign code"
           }
         ],
         "field_type": "radio",
@@ -135,23 +211,28 @@ module.exports = {
         "name": "Package Map",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
+            "displayValue": "Read",
             "value": "Read",
             "description": "Access to ListPackage, ListPackages, GetPackage, GetPackageMapById, ValidatePackage, GetQueryFileMapping, GetPackageMapSelectOptions,GetPartFromPackageMap"
           },
           {
+            "displayValue": "Write",
             "value": "Write",
             "description": "Access to AddPackage, CopyPackageMap, ActivatePackage, DeActivatePackage, AddPartToPackageMap, RemovePartFromPackageMap"
           },
           {
+            "displayValue": "Full",
             "value": "Full",
             "description": "Access to DeletePackage"
           }
@@ -164,15 +245,18 @@ module.exports = {
         "name": "Metrics",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
+            "displayValue": "Read",
             "value": "Read",
             "description": "Read ROXIE metrics"
           }
@@ -185,16 +269,19 @@ module.exports = {
         "name": "Control",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
-            "value": "Control",
+            "displayValue": "Control",
+            "value": "Read",
             "description": "Access ROXIE control commands"
           }
         ],
@@ -210,24 +297,29 @@ module.exports = {
         "name": "Own",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
+            "displayValue": "Read",
             "value": "Read",
             "description": "Read workunits"
           },
           {
-            "value": "Create",
+            "displayValue": "Create",
+            "value": "Write",
             "description": "Create, modify, resubmit, abort workunits"
           },
           {
-            "value": "Delete",
+            "displayValue": "Delete",
+            "value": "Full",
             "description": "Delete workunits"
           }
         ],
@@ -239,24 +331,29 @@ module.exports = {
         "name": "Others",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
+            "displayValue": "Read",
             "value": "Read",
             "description": "Read ROXIE metrics"
           },
           {
-            "value": "Modify",
+            "displayValue": "Write",
+            "value": "Write",
             "description": "Modify, resubmit, abort workunits"
           },
           {
-            "value": "Delete",
+            "displayValue": "Full",
+            "value": "Full",
             "description": "Delete workunits"
           }
         ],
@@ -304,16 +401,19 @@ module.exports = {
         "name": "Thor_Queue",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
-            "value": "Control",
+            "displayValue": "Control",
+            "value": "Full",
             "description": "Promote/demote queued workunits; pause queue; clear queue; Read Thor usage stats"
           }
         ],
@@ -325,20 +425,24 @@ module.exports = {
         "name": "dfu",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
+            "displayValue": "Read",
             "value": "Read",
             "description": "Read DFU workunits"
           },
           {
-            "value": "Create",
+            "displayValue": "Create",
+            "value": "Write",
             "description": "Create, delete, update, submit, abort DFU workunits"
           }
         ],
@@ -350,16 +454,19 @@ module.exports = {
         "name": "ecl",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
-            "value": "Create",
+            "displayValue": "Create",
+            "value": "Full",
             "description": "Access the WsECL service"
           }
         ],
@@ -423,24 +530,29 @@ module.exports = {
         "name": "Management",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
+            "displayValue": "Read",
             "value": "Read",
             "description": "Read DFU logical files"
           },
           {
-            "value": "Create",
+            "displayValue": "Create",
+            "value": "Write",
             "description": "Create, delete, superfile management"
           },
           {
-            "value": "Delete_history",
+            "displayValue": "Delete History",
+            "value": "Full",
             "description": "Erase file history metadata"
           }
         ],
@@ -452,19 +564,23 @@ module.exports = {
         "name": "Drop_Zone",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
+            "displayValue": "Read",
             "value": "Read",
             "description": "Read files in Drop Zone"
           },
           {
+            "displayValue": "Write",
             "value": "Write",
             "description": "Write files to Drop Zone"
           }
@@ -477,16 +593,19 @@ module.exports = {
         "name": "Despray",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
-            "value": "Allow",
+            "displayValue": "Allow",
+            "value": "Write",
             "description": "Despray logical files"
           }
         ],
@@ -498,24 +617,29 @@ module.exports = {
         "name": "Xref",
         "ui_values": [
           {
+            "displayValue": "Default",
             "value": "Default",
             "description": ""
           },
           {
-            "value": "Deny",
-            "description": "",
-            "default": true
+            "displayValue": "Deny",
+            "value": "None",
+            "default": true,
+            "description": ""
           },
           {
+            "displayValue": "Read",
             "value": "Read",
             "description": "Access DFU XREF"
           },
           {
-            "value": "Clean",
+            "displayValue": "Clean",
+            "value": "Write",
             "description": "Clean directory"
           },
           {
-            "value": "Repair",
+            "displayValue": "Repair",
+            "value": "Full",
             "description": "Make changes and generate reports"
           }
         ],
@@ -524,7 +648,7 @@ module.exports = {
       }
     ]
   }
-  ]),
+]),
     createdAt : new Date(),
     updatedAt : new Date()
   },

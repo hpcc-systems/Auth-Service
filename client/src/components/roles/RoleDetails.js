@@ -16,7 +16,7 @@ const layout = {
   wrapperCol: { span: 16 },
   layout: "Vertical"
 };
-const formItemLayoutWithOutLabel = {
+const formitemlayoutwithoutlabel = {
   wrapperCol: {
     xs: { span: 20, offset: 0 },
     sm: { span: 16, offset: 3 },
@@ -34,79 +34,75 @@ function RoleDetails() {
 	const roleId = role ? role.roleId : '';
 	let history = useHistory();	
 
-	useEffect(() => {		
-		getPermissionTemplate(appType)	
+	useEffect(() => {
+		console.log(appType);
+		const getPermissionTemplate = async () => {
+			fetch("/api/roles/permissions?applicationType="+appType, {
+	      headers: authHeader()
+	    })
+	    .then(handleErrors)
+	    .then(async (data) => {
+	      let initialValues = [], roleDetails={};
+	      let obj = {
+	      	applicationType: appType	      	
+	      }
+	      setData(data);
+	      if(roleId != '') {
+	      	roleDetails = await getRoleDetails(roleId);
+	      	obj.rolename = roleDetails.name;
+	      	obj.description = roleDetails.description;
+	      	obj.managedby = roleDetails.managedBy;
+	      }
+
+	      if(data) {
+	      	let fields = [];
+	      	if(data[0] && data[0].permissions && data[0].permissions.length > 0) {
+		      	Object.keys(data[0].permissions).forEach((permissionKey, idx) => {
+		      		data[0].permissions[permissionKey][Object.keys(data[0].permissions[permissionKey])[0]].forEach((permission) => {
+		      			console.log(JSON.stringify(permission));
+		      			console.log(permission.field_type);
+		      			if(permission.field_type == 'radio') {
+		      				let defaultValue = permission.ui_values.filter(uiValue => uiValue.default == true);
+				      		if(roleDetails.permissions && roleDetails.permissions[permission.key]) {
+				      			initialValues.push({[permission.key]: roleDetails.permissions[permission.key]});
+				      		} else if(defaultValue && defaultValue.length > 0) {
+				      			initialValues.push({[permission.key]: defaultValue[0].value});
+				      		}
+		      			} else {
+				      		if(roleDetails.permissions && roleDetails.permissions[permission.key]) {
+				      			initialValues.push({[permission.key]: roleDetails.permissions[permission.key]});
+				      		}
+		      			}
+		      		})
+		      	})
+	      	}
+	    	}
+	      
+	      let obj2 = Object.assign({}, obj, ...initialValues);
+	      form.setFieldsValue(obj2)
+		  });
+	  };
+			
+		getPermissionTemplate();
+
   }, [appType])
 
-  useEffect(() => {		
-		if(roleId != '') {
-			getRoleDetails(roleId)	
-		}
-		if(roleId == '' && appType == '') {
-			history.push('/roles');
-		}
-  }, [roleId])
-
-  const getPermissionTemplate = (appType) => {
-  	fetch("/api/roles/permissions?applicationType="+appType, {
-      headers: authHeader()
-    })
-    .then(handleErrors)
-    .then(data => {
-      let initialValues = [];
-      setData(data);
-      if(data) {
-      	let fields = [];
-      	if(data[0].permissions && data[0].permissions.length > 0) {
-	      	Object.keys(data[0].permissions).forEach((permissionKey, idx) => {
-	      		//console.log(data[0].permissions[permissionKey][Object.keys(data[0].permissions[permissionKey])[0]]);
-	      		let radioFeilds = data[0].permissions[permissionKey][Object.keys(data[0].permissions[permissionKey])[0]].filter(permissionType => permissionType.field_type == 'radio');
-	      		//console.log(radioFeilds);
-	      		fields = fields.concat(radioFeilds);
-	      	})
-	      	//console.log(fields);
-	      	
-	      	fields.forEach((radioField) => {
-	      		let defaultValue = radioField.ui_values.filter(uiValue => uiValue.default == true);
-	      		if(defaultValue && defaultValue.length > 0) {
-	      			initialValues.push({[radioField.key]: defaultValue[0].value});
-	      		}
-	      	})
-	      }
-      }
-      let obj = {
-      	applicationType: appType			
-      }
-      let obj2 = Object.assign({}, obj, ...initialValues);
-      form.setFieldsValue(obj2)
-
-    }).catch(error => {
-      console.log(error);
-    });			
-  }
-
-  const getRoleDetails = (roleId) => {
-  	fetch("/api/roles?id="+roleId, {
-      headers: authHeader()
-    })
-		.then(handleErrors)
-		.then(data => {
-      setRoleDetails(data);
-      form.setFieldsValue({
-      	applicationType: data.applicationType,
-      	rolename: data.name,
-      	description: data.description,
-      	managedby: data.managedBy,
-      	...data.permissions
-      })
-      console.log(data)
-      console.log(form.getFieldsValue())
-
-    }).catch(error => {
-      console.log(error);
-    });			
-  }
-
+  const getRoleDetails = async () => {
+		return new Promise((resolve, reject) => {
+			fetch("/api/roles?id="+roleId, {
+	    	headers: authHeader()
+	    })
+			.then(handleErrors)
+			.then(data => {      
+	      setRoleDetails(data);
+	      resolve(data)
+	    }).catch(error => {
+	    	console.log(error);
+	    	reject(error);
+	  	})
+	  })
+	}	
+ 
 	const onFinish = values => {
 		console.log(values);
     let keysToExclude = ["applicationType", "description", "managedby", "rolename"], permissions={};
@@ -163,7 +159,7 @@ function RoleDetails() {
   	//look for default value
   	uiValues.filter((uiValue) => {
   		if(uiValue.default && uiValue.default==true) {
-  			selectedValue = uiValue.value;
+  			selectedValue = uiValue.displayValue;
   		}
   	})
   	return selectedValue;
@@ -225,8 +221,8 @@ function RoleDetails() {
 							    				{permissionType.field_type == 'radio' ?
 							    					<Radio.Group name={permissionType.key} >
 							    						{permissionType.ui_values.map((uiValue) => 
-							    							<Tooltip placement="rightTop" key={uiValue.value} title={uiValue.description}>
-							    								<Radio value={uiValue.value}>{uiValue.value}</Radio>  				
+							    							<Tooltip placement="rightTop" key={uiValue.displayValue} title={uiValue.description}>
+							    								<Radio value={uiValue.value}>{uiValue.displayValue}</Radio>  				
 							    							</Tooltip>	
 							    						)}										  	
 							    					</Radio.Group>
@@ -238,8 +234,7 @@ function RoleDetails() {
 												              {fields.map((field, index) => (
 												                <Form.Item										                  
 												                  required={false}
-												                  key={permissionType.key}
-												                  formItemLayoutWithOutLabel
+												                  key={permissionType.key}												                  
 												                >
 												                  <span style={{"display": "-webkit-inline-box"}}>
 													                  <Form.Item
