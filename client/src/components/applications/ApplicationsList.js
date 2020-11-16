@@ -120,7 +120,7 @@ function ApplicationsList() {
       </span>	
       <Table dataSource={data} columns={columns} />
 
-      <ApplicationDetailsDialog isShowing={isShowing} onClose={handleClose} selectedApplicationId={selectedApplicationId}/>
+      <ApplicationDetailsDialog isShowing={isShowing} onClose={handleClose} selectedApplicationId={selectedApplicationId} applications={data}/>
     </React.Fragment>
 	  )  
 }

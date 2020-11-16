@@ -26,6 +26,10 @@ let hashPassword = (password) => {
   return crypto.createHash("sha256").update(salt+password).digest('base64');
 }
 
+let findApplication = (clientId) => {
+  return Application.findOne({where: {clientId:clientId}})
+}
+
 /* GET users listing. */
 router.post('/login', [
   body('username')
@@ -169,17 +173,20 @@ router.post('/registerUser', [
       }
     }).then(async function(result) {
       let promises=[];     
+      let application = await findApplication(req.body.clientId);
+      console.log("applicationId: "+application.id)
       //update scenario
       if(!result[1]) {
         let missingRoleFound = false;
         let roles = await Role.findOne({where: {"name":req.body.role}})          
         console.log('roles found: '+roles.length);
+        
         UserRoles.findOrCreate({
-          where: {userId: result[0].id, roleId:roles.id, applicationId: req.body.applicationId},
+          where: {userId: result[0].id, roleId:roles.id, applicationId: application.id},
           defaults: {
             "userId": result[0].id,
             "roleId": roles.id,  
-            "applicationId": req.body.applicationId,
+            "applicationId": application.id,
             "priority": 1
           }
         }).then((result) => {
@@ -196,7 +203,7 @@ router.post('/registerUser', [
       UserRoles.create({
         "userId": result[0].id,
         "roleId": roles.id,  
-        "applicationId": req.body.applicationId,
+        "applicationId": application.id,
         "priority": 1
       }).then
       Promise.all(promises).then(() => {
@@ -226,24 +233,19 @@ router.post('/forgotPassword', [
       where: {
         username: req.body.username
       }      
-    }).then(user => {
+    }).then(async user => {
       if(user == null) {        
         res.status(500).json({"success":"false", "message": "User not found."});
       }
-      Application.findOne({
-        where: {
-          id: req.body.applicationId
-        }
-      }).then((application) => {
-        if(application == null) {
-          res.status(500).json({"success":"false", "message": "Application not found."});
-        }
-        PasswordReset.create({userid:user.id}).then((passwordReset) => {
-          //send password reset email.
-          let resetUrl = req.body.resetUrl + "/" + passwordReset.id
-          //NotificationModule.notifyPasswordReset(user.email, application.name, user.username, resetUrl);    
-          res.status(200).json({"success":"true", "resetUrl": resetUrl});
-        })
+      let application = await findApplication(req.body.clientId);
+      if(application == null) {
+        res.status(500).json({"success":"false", "message": "Application not found."});
+      }
+      PasswordReset.create({userid:user.id}).then((passwordReset) => {
+        //send password reset email.
+        let resetUrl = req.body.resetUrl + "/" + passwordReset.id
+        //NotificationModule.notifyPasswordReset(user.email, application.name, user.username, resetUrl);    
+        res.status(200).json({"success":"true", "resetUrl": resetUrl});
       })
     })
     //res.status(500).json({"success":"false"});

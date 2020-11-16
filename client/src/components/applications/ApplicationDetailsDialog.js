@@ -13,7 +13,7 @@ const layout = {
   wrapperCol: { span: 12 },
 };
 
-function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId }) {
+function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId, applications }) {
 	const [applicationDetails, setApplicationDetails] = useState({
     id: '',
     name: '',
@@ -33,6 +33,11 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
   }, [selectedApplicationId])
 
   const handleOk = () => {
+    if(applications.filter(application => application.clientId == applicationDetails.clientId).length > 0) {
+      message.error("There is already an Application with the same Client Id, please use a different Client Id for "+applicationDetails.name);
+      return;
+    }
+
     fetch('/api/application', {
       method: applicationDetails.id == '' ? 'post' : 'put',
       headers: authHeader(),
@@ -114,8 +119,7 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId })
           onOk={() => {
             form
               .validateFields()
-              .then(values => {
-                form.resetFields();
+              .then(values => {                
                 handleOk();
               })
               .catch(info => {
