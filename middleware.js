@@ -21,7 +21,7 @@ const withAuth = function(req, res, next) {
     try {
       var verified = jwt.verify(token, publicKey, verifyOptions);
     }catch(err) {
-      res.status(401).json({message: "Un-Authorized."})    
+      return res.status(401).json({message: "Un-Authorized."})    
     }
     next();
   }

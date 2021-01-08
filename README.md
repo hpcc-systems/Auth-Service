@@ -3,7 +3,7 @@
 A JWT token based authentication service. Tokens are signed and verified via key pairs. This service provides a UI to manage the users as well as API's to generate/verify tokens.   
 ### Docker Setup:
 1. Clone the repository
-2. Create a Private/Public key pairs and store them under /keys directory (/keys directory needs to be created). 
+2. Create a Private/Public key pairs and store them under /keys directory (Public key should be a .pem file).
 3. Rename .env.sample to .env.
     a. Provide the database details in .env file
     b. Provide key names and modify Ports if required
@@ -16,7 +16,7 @@ A JWT token based authentication service. Tokens are signed and verified via key
 1. Follow steps 1-4
 2. run npm install under root
 3. run npx sequelize-cli db:migrate from root directory to create database schema
-4. Run app.js (nodemon app.js)
+4. Run app.js (`npm run dev`)
 5. run npm install under /client
 6. run npm start /client
 7. The user interface to manage users should be available at http(s)://<hostname>:<Port> once the application starts up succesfully. 
