@@ -34,7 +34,9 @@ let findApplication = (clientId) => {
 router.post('/login', [
   body('username')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
-  body('password').isLength({ min: 4 })  
+  body('password').isLength({ min: 4 }),
+  body('clientId')
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).optional().withMessage('Invalid Client Id'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
@@ -45,7 +47,7 @@ router.post('/login', [
     where: {
       username: req.body.username
     },
-    include:[{model: models.Role }]
+    include:[{model: models.Role},{model: models.Application}]
   }).then(user => {
     if (!user) {
       throw new Error('User Not Found.');
@@ -76,6 +78,17 @@ router.post('/login', [
       console.log('bcrypt password valid');
       //return res.status(401).send({ auth: false, accessToken: null, reason: "Invalid Password!" });      
     }
+
+    if (req.body.clientId) {
+      const hasPermission = user.Applications.some(({ clientId }) => clientId === req.body.clientId);
+      
+      if (!hasPermission) {
+        throw new Error("Unauthorized");
+      }
+
+      user.clientId = user.Applications.find(({ clientId }) => clientId === req.body.clientId).clientId;
+    }
+
     // PRIVATE
   	var privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/' + process.env["PRIVATE_KEY_NAME"]), 'utf8');
   	//Permissions.findAll({where: {id:user.Roles[0].permissions}, attributes: ['id','name'], raw: true}).then(permissions => {
@@ -87,7 +100,8 @@ router.post('/login', [
        username: user.username,
        email: user.email,
        organization: user.organization,
-       role: user.Roles
+       role: user.Roles,
+       clientId: user.clientId,
       };
 
       // SIGNING OPTIONS
@@ -130,8 +144,23 @@ router.post('/verify', function(req, res, next) {
     console.log('token: '+token);
     var verified = jwt.verify(token, publicKey, verifyOptions);
 
-    res.status(200).send({ verified: verified });
+    const { clientId: tokenClientId, id } = jwt.decode(token);
 
+    if (tokenClientId) {
+      User.findOne({
+        where: {id},
+        include:[{model: models.Role},{model: models.Application,where: {clientId: tokenClientId}}]
+      }).then(user => {
+        if (!user) throw new Error("Unauthorized");
+  
+        res.status(200).send({ verified: verified })
+      }).catch(err => {
+        console.log('err', err);
+        res.status(500).send('Error -> ' + err);
+      })
+    } else {
+      res.status(200).send({ verified: verified })
+    }
   } catch(err) {
     console.log('err', err);
     res.status(500).send('Error -> ' + err);
