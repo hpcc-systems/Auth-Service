@@ -129,6 +129,10 @@ function UserDetails() {
     });	
   };  
   
+  const onCancel = () => {
+    history.push('/users');
+  }
+
   const getApplications = () => {
   	fetch("/api/application/all", {
      	headers: authHeader()
@@ -532,7 +536,7 @@ function UserDetails() {
 
 	      <Row className="footer-buttons">
 	      	<Col style={{"padding-right": "10px"}}>  
-		        <Button htmlType="button">
+		        <Button htmlType="button" onClick={onCancel}>
 		          Cancel
 		        </Button>
 		      </Col>
