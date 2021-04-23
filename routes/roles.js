@@ -89,6 +89,21 @@ router.get('/', oneOf([
   });
 });
 
+router.get('/applicationType', [
+  query('type').matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid Application Type')
+], (req, res) => {
+  const errors = validationResult(req).formatWith(errorFormatter);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ success: false, errors: errors.array() });
+  } 
+  let appType = req.query.type;
+  Role.findOne({where:{"id":roleId}}).then((result) => {        
+    res.json(result);
+  }).catch(function(err) {
+     console.log("error occured: "+err);
+  });
+});
+
 router.delete('/', oneOf([
     query('id').isUUID(4).withMessage("Invalid Id"),
     query('id').isInt().withMessage("Invalid Id"),
