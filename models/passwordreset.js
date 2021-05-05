@@ -8,8 +8,8 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       autoIncrement: false
     },
-    userid: DataTypes.INTEGER
-  }, {paranoid: true, freezeTableName: true});
+    userid: DataTypes.INTEGER  }, 
+  {paranoid: true, freezeTableName: true});
   PasswordReset.associate = function(models) {
     // associations can be defined here
     PasswordReset.belongsTo(models.User);

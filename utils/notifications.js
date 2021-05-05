@@ -1,23 +1,42 @@
-const sgMail = require('@sendgrid/mail');
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+require('dotenv').config();
+const nodemailer = require("nodemailer");
+const chalk = require("chalk")
 
-exports.notifyPasswordReset = (userEmail, applicationName, userName, resetUrl) => {
-	console.log("notifyPasswordReset: "+userEmail, applicationName, userName, resetUrl);
-  const msg={};  
-  msg.to = userEmail;
-  msg.from = 'hpcc-solutions-lab@lexisnexisrisk.com'; // Use the email address or domain you verified above
-  msg.subject = 'Password Reset Request Instructions for Tombolo';
-  msg.html = 'A password reset has been requested for '+applicationName+' account associated with user name '+userName+'. Click  the below link to reset your password. \n\n '+resetUrl;
 
-  sgMail
-  .send(msg)
-  .then(() => {
-  	console.log("email sent");
-  }, error => {
-    console.error(error);
-
-    if (error.response) {
-      console.error(error.response.body)
+const sendPasswordResetLink = async (receiver_email, fristName, lastName, resetUrl) => {
+  const transporter = nodemailer.createTransport({
+    host: process.env.HOST,
+    port: process.env.EMAIL_PORT,
+    secure: false,
+    auth: {},
+    tls:{
+        rejectUnauthorized: false
     }
   });
-} 
+
+
+
+  
+  const options = {
+    from: process.env.SENDER,
+    to: receiver_email,
+    subject: "Reset Password",
+    text: `A password reset url has been requested for the ECL Cloud IDE account associated with the email address ${receiver_email} Click the link below to complete this reset:
+    ${resetUrl}`,
+    html : ` <p> A password reset url has been requested for the ECL Cloud IDE account associated with the email address ${receiver_email} Click the link below to complete this reset:
+    ${resetUrl}</p>`
+  };
+
+  try{
+    let info = await transporter.sendMail(options);
+    return info;
+  }catch (error){
+  return error;
+  }
+};
+
+
+module.exports = {
+  sendPasswordResetLink
+}
+
