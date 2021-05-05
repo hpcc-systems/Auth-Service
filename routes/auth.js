@@ -20,8 +20,6 @@ const { body, query, check, validationResult } = require('express-validator');
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {    
   return `${location}[${param}]: ${msg}`;
 };
-const  jwt_decode = ("jwt-decode");
-const chalk = require("chalk");
 
 let hashPassword = (password) => {
   let salt = password.substring(0, 2);
@@ -296,7 +294,6 @@ router.post('/forgotPassword', [
     console.log('err', err);
   }
 });  
-
 
 
 router.post('/resetPassword', 
