@@ -2,7 +2,6 @@ require('dotenv').config();
 const nodemailer = require("nodemailer");
 const chalk = require("chalk")
 
-
 const sendPasswordResetLink = async (receiver_email, fristName, lastName, resetUrl) => {
   const transporter = nodemailer.createTransport({
     host: process.env.HOST,
@@ -14,9 +13,6 @@ const sendPasswordResetLink = async (receiver_email, fristName, lastName, resetU
     }
   });
 
-
-
-  
   const options = {
     from: process.env.SENDER,
     to: receiver_email,
@@ -34,7 +30,6 @@ const sendPasswordResetLink = async (receiver_email, fristName, lastName, resetU
   return error;
   }
 };
-
 
 module.exports = {
   sendPasswordResetLink
