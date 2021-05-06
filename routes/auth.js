@@ -21,6 +21,7 @@ const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   return `${location}[${param}]: ${msg}`;
 };
 
+
 let hashPassword = (password) => {
   let salt = password.substring(0, 2);
   console.log(salt); 
@@ -92,6 +93,7 @@ router.post('/login', [
 
     // PRIVATE
   	var privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/' + process.env["PRIVATE_KEY_NAME"]), 'utf8');
+
   	//Permissions.findAll({where: {id:user.Roles[0].permissions}, attributes: ['id','name'], raw: true}).then(permissions => {
       // PAYLOAD
       var payload = {
@@ -273,8 +275,7 @@ router.post('/forgotPassword', [
       }else{
         PasswordReset.create({userid:user.id}).then((passwordReset) => {
 
-          const token = jwt.sign({user: user.name, id: passwordReset.id}, process.env.RESET_KEY, {expiresIn: "60m"} );
-          // const token = jwt.sign({user: user.name, id: passwordReset.id}, passwordReset.id, {expiresIn: "60m"} );
+          const token = jwt.sign({user: user.name, id: passwordReset.id}, privateKey, {expiresIn: "60m"} );
 
           const resetURL = `${req.body.resetUrl}/${token}`
          NotificationModule.sendPasswordResetLink(user.email,  user.firstName, user.lastName, resetURL).then(
@@ -309,7 +310,7 @@ router.post('/resetPassword',
   }
   if(req.body.id){  
     try {
-      payload = jwt.verify(req.body.id, process.env.RESET_KEY)
+      payload = jwt.verify(req.body.id, privateKey)
 
     } catch (e) {
       if (e instanceof jwt.JsonWebTokenError) {
