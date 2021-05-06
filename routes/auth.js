@@ -270,12 +270,11 @@ router.post('/forgotPassword', [
       }      
     }).then(async user => {
       if(user == null) {  
-        console.log("<<<< user not found")
-        res.status(500).json({"success":"false", "message": "User not found."});
+        res.status(500).json({"success": false, "message": "User not found."});
       }else{
       let application = await findApplication(req.body.clientId);
       if(application == null) {
-        res.status(500).json({"success":"false", "message": "Application not found."});
+        res.status(500).json({"success": false, "message": "Application not found."});
       }else{
         PasswordReset.create({userid:user.id}).then((passwordReset) => {
 
@@ -284,13 +283,12 @@ router.post('/forgotPassword', [
           const resetURL = `${req.body.resetUrl}/${token}`
          NotificationModule.sendPasswordResetLink(user.email,  user.firstName, user.lastName, resetURL).then(
            result => {
-            //  console.log("<<<< Result after sending email ",  JSON.stringify(result))
              if(result.accepted){
                console.log("Password reset instructions sent")
-               res.status(201).json({"success":"true"});
+               res.status(201).json({"success":true});
              }else{
-               console.log("unable to send password reset instructions", result)
-               return res.status(500).send({err : "Unable to send password reset instructions"});
+               console.log("unable to send password reset instructions")
+               return res.status(599).send({"success" : false , "message" : "Unable to send password reset instructions"});
              }
       });  
         })

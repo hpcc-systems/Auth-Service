@@ -3,23 +3,23 @@ const nodemailer = require("nodemailer");
 const chalk = require("chalk")
 
 const sendPasswordResetLink = async (receiver_email, fristName, lastName, resetUrl) => {
-  // const transporter = nodemailer.createTransport({
-  //   host: process.env.HOST,
-  //   port: process.env.EMAIL_PORT,
-  //   secure: false,
-  //   auth: {},
-  //   tls:{
-  //       rejectUnauthorized: false
-  //   }
-  // });
-
   const transporter = nodemailer.createTransport({
-    service: process.env.SERVICE,
-    auth: {
-       user: process.env.SENDER,
-      pass: process.env.PASSWORD
+    host: process.env.HOST,
+    port: process.env.EMAIL_PORT,
+    secure: false,
+    auth: {},
+    tls:{
+        rejectUnauthorized: false
     }
   });
+
+  // const transporter = nodemailer.createTransport({
+  //   service: process.env.SERVICE,
+  //   auth: {
+  //      user: process.env.SENDER,
+  //     pass: process.env.PASSWORD
+  //   }
+  // });
 
 
 
@@ -37,6 +37,7 @@ const sendPasswordResetLink = async (receiver_email, fristName, lastName, resetU
     let info = await transporter.sendMail(options);
     return info;
   }catch (error){
+    console.log(error)
   return error;
   }
 };
