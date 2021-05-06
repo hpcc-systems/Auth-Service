@@ -1,3 +1,4 @@
+require('dotenv').config();
 var express = require('express');
 var router = express.Router();
 const jwt = require('jsonwebtoken');
@@ -19,6 +20,7 @@ const { body, query, check, validationResult } = require('express-validator');
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {    
   return `${location}[${param}]: ${msg}`;
 };
+
 
 let hashPassword = (password) => {
   let salt = password.substring(0, 2);
@@ -91,6 +93,7 @@ router.post('/login', [
 
     // PRIVATE
   	var privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/' + process.env["PRIVATE_KEY_NAME"]), 'utf8');
+
   	//Permissions.findAll({where: {id:user.Roles[0].permissions}, attributes: ['id','name'], raw: true}).then(permissions => {
       // PAYLOAD
       var payload = {
@@ -249,8 +252,8 @@ router.post('/registerUser', [
 
 
 router.post('/forgotPassword', [
-  body('username')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
+  body('email')
+    .matches(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+$/).withMessage('Invalid E-mail'),
 ], (req, res) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
@@ -260,22 +263,32 @@ router.post('/forgotPassword', [
   try {    
     User.findOne({
       where: {
-        username: req.body.username
+        email: req.body.email
       }      
     }).then(async user => {
-      if(user == null) {        
+      if(user == null) {  
         res.status(500).json({"success":"false", "message": "User not found."});
-      }
+      }else{
       let application = await findApplication(req.body.clientId);
       if(application == null) {
         res.status(500).json({"success":"false", "message": "Application not found."});
-      }
-      PasswordReset.create({userid:user.id}).then((passwordReset) => {
-        //send password reset email.
-        let resetUrl = req.body.resetUrl + "/" + passwordReset.id
-        //NotificationModule.notifyPasswordReset(user.email, application.name, user.username, resetUrl);    
-        res.status(200).json({"success":"true", "resetUrl": resetUrl});
-      })
+      }else{
+        PasswordReset.create({userid:user.id}).then((passwordReset) => {
+
+          const token = jwt.sign({user: user.name, id: passwordReset.id}, privateKey, {expiresIn: "60m"} );
+
+          const resetURL = `${req.body.resetUrl}/${token}`
+         NotificationModule.sendPasswordResetLink(user.email,  user.firstName, user.lastName, resetURL).then(
+           result => {
+        if(result.errno){
+          res.status(502).json({'error': 'Error sending E-mail'})
+        }else{
+          res.status(200).json({'message' : 'Password reset link sent'})
+        }
+      });  
+        })
+ }}
+      
     })
     //res.status(500).json({"success":"false"});
   } catch (err) {
@@ -283,18 +296,37 @@ router.post('/forgotPassword', [
   }
 });  
 
-router.post('/resetPassword', [
+
+router.post('/resetPassword', 
+[
   body('id')
-    .isUUID(4).withMessage('Invalid id'),
-  body('password').isLength({ min: 4 })    
-], (req, res) => {
+  .isLength({ min: 36 }).withMessage('Invalid id'),
+  body('password').isLength({ min: 8 }).withMessage('Invalid Password')
+],
+ (req, res) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
+  if(req.body.id){  
+    try {
+      payload = jwt.verify(req.body.id, privateKey)
+
+    } catch (e) {
+      if (e instanceof jwt.JsonWebTokenError) {
+        // if the error thrown is because the JWT is unauthorized, return a 401 error
+
+        return res.status(401).json({error: 'Expired or invalid link'})
+      }
+      // otherwise, return a bad request error
+      return res.status(400).json({error: 'Bad request'})
+    }
+  }
+
 
   try {    
-    PasswordReset.findOne({where: {id:req.body.id}}).then((resetRecord) => {
+    PasswordReset.findOne({where: {id:payload.id}}).then((resetRecord) => {
+    // PasswordReset.findOne({where: {id:req.body.id}}).then((resetRecord) => {
       if(resetRecord == null) {
         res.status(500).json({"success":"false", "message": "Invalid Password Reset Request"});          
       } else {
