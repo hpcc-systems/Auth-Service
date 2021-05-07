@@ -27,7 +27,7 @@ const sendPasswordResetLink = async (receiver_email, fristName, lastName, resetU
     subject: "Reset Password",
     text: `A password reset url has been requested for the ECL Cloud IDE account associated with the email address ${receiver_email} Click the link below to complete this reset:
     ${resetUrl}`,
-    html : ` <p> A password reset url has been requested for the Tombolo account associated with the email address ${receiver_email} Click the <a href="${resetUrl}"> Here</a> to complete this reset:
+    html : ` <p> A password reset url has been requested for the Tombolo account associated with the email address ${receiver_email}. Please click  <a href="${resetUrl}"> here</a> to complete the password reset.
    </p>`
   };
 
