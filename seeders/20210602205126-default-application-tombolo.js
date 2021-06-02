@@ -10,7 +10,7 @@ module.exports = {
         description: "Add Description Here",
         email: " your email here",
         owner: "Owner Name",
-        clientId: "Client ID",
+        clientId: "ClientID",
         CreatedAt: new Date(),
         updatedAt: new Date(),
         applicationType: "Tombolo",
