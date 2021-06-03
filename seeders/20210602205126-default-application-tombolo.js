@@ -1,4 +1,5 @@
 "use strict";
+require("dotenv").config();
 const uuidv4 = require("uuid/v4");
 
 module.exports = {
@@ -7,10 +8,10 @@ module.exports = {
       {
         id: uuidv4(),
         name: "Tombolo",
-        description: "Add Description Here",
-        email: " your email here",
-        owner: "Owner Name",
-        clientId: "ClientID",
+        description: "Tombolo application",
+        email: process.env.EMAIL,
+        owner: process.env.OWNER,
+        clientId: process.env.CLIENT_ID,
         CreatedAt: new Date(),
         updatedAt: new Date(),
         applicationType: "Tombolo",
