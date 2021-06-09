@@ -1,8 +1,8 @@
 server {
   listen $WEB_EXPOSED_PORT;
   ssl on;
-  ssl_certificate /etc/ssl/ide.hsl.noam.lnrm.net.pem;
-  ssl_certificate_key /etc/ssl/ide.hsl.noam.lnrm.net.key;
+  ssl_certificate <cert_path.pem>;
+  ssl_certificate_key <cert_path.key>;
   server_name $HOSTNAME;
   add_header Strict-Transport-Security "max-age=31536000;" always;
   add_header X-XSS-Protection "1; mode=block";
