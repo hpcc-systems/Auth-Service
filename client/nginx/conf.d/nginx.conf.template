@@ -1,0 +1,71 @@
+server {
+  listen $WEB_EXPOSED_PORT;
+  ssl on;
+  ssl_certificate /etc/ssl/ide.hsl.noam.lnrm.net.pem;
+  ssl_certificate_key /etc/ssl/ide.hsl.noam.lnrm.net.key;
+  server_name $HOSTNAME;
+  add_header Strict-Transport-Security "max-age=31536000;" always;
+  add_header X-XSS-Protection "1; mode=block";
+  add_header X-Permitted-Cross-Domain-Policies "none";
+  add_header X-Frame-Options "deny";
+  add_header X-Content-Type-Options "nosniff";
+  add_header Content-Security-Policy "script-src 'self'; object-src 'self';";
+
+  error_log /var/log/nginx/authservice-error.log;
+  access_log /var/log/nginx/authservice-access.log;
+  location / {
+    proxy_set_header X-Real-IP ${DOLLAR}remote_addr; 
+    proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for; 
+    proxy_set_header Host ${DOLLAR}http_host; 
+    proxy_set_header X-NginX-Proxy true; 
+    proxy_hide_header X-Powered-By; 
+    proxy_hide_header Server;  
+    expires -1;
+    
+    root   /usr/share/nginx/html;
+    index  index.html index.htm;
+    try_files ${DOLLAR}uri ${DOLLAR}uri/ /index.html;
+  }
+
+  location /api { 
+    proxy_pass http://node:3004;
+  }
+  
+  error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+    root  /usr/share/nginx/html;
+  }
+}
+
+server {
+    listen $WEB_PORT;
+    server_name $HOSTNAME;
+
+    error_log /var/log/nginx/tombolo-error.log;
+    access_log /var/log/nginx/tombolo-access.log;
+
+    add_header Strict-Transport-Security "max-age=31536000;" always;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Frame-Options "deny";
+    add_header X-Content-Type-Options "nosniff";
+    add_header Content-Security-Policy "script-src 'self'; object-src 'self';";
+
+
+    location / {
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header Host ${DOLLAR}http_host;
+        proxy_set_header X-NginX-Proxy true;
+        proxy_hide_header X-Powered-By;
+        proxy_hide_header Server;
+        expires -1;
+
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+        try_files ${DOLLAR}uri ${DOLLAR}uri/ /index.html;
+    }
+
+    location /api {
+        proxy_pass http://node:3004;
+    }
+}

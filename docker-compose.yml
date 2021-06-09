@@ -2,7 +2,7 @@ version: "3"
 services:
   node:
     restart: always
-    entrypoint: [./docker-entry.sh, "auth_mysql_db", "3306"]
+    entrypoint: [sh, ./docker-entry.sh, "auth_mysql_db", "3306"]
     build:
       context: .
       dockerfile: Dockerfile
@@ -41,13 +41,17 @@ services:
     environment:
       PORT: ${WEB_PORT}
       PROXY_URL: http://node:${PORT}
+      WEB_PORT: ${WEB_PORT}
+      WEB_EXPOSED_PORT: ${WEB_EXPOSED_PORT}
+      HOSTNAME: ${HOST_HOSTNAME}
     ports:
       - ${WEB_PORT}:${WEB_PORT}
       - ${WEB_EXPOSED_PORT}:${WEB_EXPOSED_PORT}
     volumes:
       - ${CERT_PATH}:/etc/ssl/certs
     depends_on:
-      - auth_mysql_db    
+      - auth_mysql_db
+    entrypoint: [sh, /etc/nginx/run_nginx.sh, "${HOST_HOSTNAME}"]  
 
 networks:
   authservice-network:

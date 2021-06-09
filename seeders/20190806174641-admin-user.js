@@ -8,7 +8,7 @@ module.exports = {
       firstName : 'admin',
       lastName : 'admin',
       username : 'admin',
-      email : '<admin account email address>',
+      email : 'admin@authservice.com',
       password: bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10),
       createdAt : new Date(),
       updatedAt : new Date()
