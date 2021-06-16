@@ -283,7 +283,7 @@ function UserDetails() {
 
   	console.log(foundDifferentApp)
   	if(foundDifferentApp) {
-  		//message.error("Please select Roles of the same application to Preview the permissions.")
+  		message.error("Please select Roles of the same application to Preview the permissions.")
   	} else {  
 	  	let url = '/api/auth/v20/previewPermissions?roleIds='+roleIds.join(',');
 	  	fetch(url, {
