@@ -206,7 +206,6 @@ router.post('/registerUser', [
         "organization": req.body.organization
       }
     }).then(async function(result) {
-      let promises=[];     
       let application = await findApplication(req.body.clientId);
       console.log("applicationId: "+application.id)
       //update scenario
@@ -227,28 +226,26 @@ router.post('/registerUser', [
           if(!result[1]) {
             return res.status(500).json({ error: 'There is already a user account associated with this user name' });  
           } else {
-            Promise.all(promises).then(() => {
-              res.status(202).json({"success":"true"});             
-            });
+            res.status(202).json({"success":"true"});             
           }
         })
     } else {  
       let roles = await Role.findOne({where: {"name":req.body.role}})          
-      UserRoles.create({
+      await UserRoles.create({
         "userId": result[0].id,
         "roleId": roles.id,  
         "applicationId": application.id,
         "priority": 1
-      }).then
-      Promise.all(promises).then(() => {
-        res.status(201).json({"success":"true"});
-      });             
+      })
+      res.status(201).json({"success":"true"});             
     }  
     }), function(err) {
-        return res.status(500).send(err);
+      console.log(err)
+      return res.status(500).send(err);
     }
   } catch (err) {
-      console.log('err', err);
+    console.log('err', err);
+    return res.status(500).send(err);
   }
 });
 
