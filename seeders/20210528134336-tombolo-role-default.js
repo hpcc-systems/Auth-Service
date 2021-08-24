@@ -5,11 +5,11 @@ module.exports = {
   up: (queryInterface, Sequelize) => {
     return Promise.all([
       queryInterface.sequelize.query(
-        'select * from Roles where name="Tombolo_Admin" and applicationType="Tombolo"', {
+        'select * from Roles where name="Tombolo_Admin" and applicationType="Tombolo" and deletedAt is null', {
         type: queryInterface.sequelize.QueryTypes.SELECT
       }).then(roles => {
         if(!roles || roles.length == 0) {          
-          return queryInterface.upsert("Roles", [
+          return queryInterface.bulkInsert("Roles", [
             {
               id: uuidv4(),
               applicationType: "Tombolo",
@@ -31,11 +31,11 @@ module.exports = {
         }
       }),
       queryInterface.sequelize.query(
-        'select * from Roles where name="Creator" and applicationType="Tombolo"', {
+        'select * from Roles where name="Creator" and applicationType="Tombolo" and deletedAt is null', {
         type: queryInterface.sequelize.QueryTypes.SELECT
       }).then(roles => {
         if(!roles || roles.length == 0) {
-          return queryInterface.upsert("Roles", [{
+          return queryInterface.bulkInsert("Roles", [{
             id: uuidv4(),
             applicationType: "Tombolo",
             name: "Creator",

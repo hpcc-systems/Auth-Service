@@ -37,7 +37,7 @@ function UsersList() {
 
 	const handleEdit = (record) => {
     dispatch(userActions.userSelected(
-    	record.id
+    	record.username
     ));
 
 		history.push("/user/details");

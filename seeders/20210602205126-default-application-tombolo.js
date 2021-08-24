@@ -5,7 +5,7 @@ const uuidv4 = require("uuid/v4");
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.sequelize.query(
-      'select * from Application where name="Tombolo" and applicationType="Tombolo"', {
+      'select * from Application where name="Tombolo" and applicationType="Tombolo" and deletedAt is null', {
       type: queryInterface.sequelize.QueryTypes.SELECT
     }).then(application => {
       if(!application || application.length == 0) {

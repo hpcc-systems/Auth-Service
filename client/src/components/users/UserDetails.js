@@ -50,7 +50,6 @@ function UserDetails() {
   }, [])
 
   useEffect(() => {				
-		console.log(user)
 		if(!user) {
 			console.log('redirecting');
 			history.push('/users');
@@ -63,13 +62,15 @@ function UserDetails() {
   }, [user])  
 
 	const getUserDetails = (userId) => {
-  	fetch("/api/users/details?id="+userId, {
+  	fetch("/api/users/details?usernames="+userId, {
       headers: authHeader()
     })
     .then(handleErrors)    
-    .then(data => {
-    	let appRole=[], appRoleObj={};
+    .then(response => {
+			let data = response[0];
+    	let appRole=[], appRoleObj={};			
     	setUserDetails(data);
+
       form.setFieldsValue({
       	firstName: data.firstName,
 	    	lastName: data.lastName,
@@ -78,24 +79,26 @@ function UserDetails() {
 	    	employeeId: data.employeeId,
 	    	userType: data.type
       })
-      data.Roles.forEach((role, idx) => {      	
-      	appRoleObj = {
-      		priority: role.User_Roles.priority,
-      		roleId: role.id,
-      		roleName: role.name,
-      		appId: role.User_Roles.applicationId
-      	};
+			if(data.Roles) {
+				data.Roles.forEach((role, idx) => {      	
+					appRoleObj = {
+						priority: role.User_Roles.priority,
+						roleId: role.id,
+						roleName: role.name,
+						appId: role.User_Roles.applicationId
+					};
 
-      	let application = data.Applications.filter(application => application.id == role.User_Roles.applicationId);
-      	if(application) {
-      		appRoleObj.appName = application[0].name;
-      	}
-				appRole.push(appRoleObj);    				  	      	
-      })
-      appRole.sort(function(a, b) {
-			  return a.priority - b.priority;
-			});
-      setAppRoles(appRole);
+					let application = data.Applications.filter(application => application.id == role.User_Roles.applicationId);
+					if(application) {
+						appRoleObj.appName = application[0].name;
+					}
+					appRole.push(appRoleObj);    				  	      	
+				})
+				appRole.sort(function(a, b) {
+					return a.priority - b.priority;
+				});
+				setAppRoles(appRole);
+			}
     }).catch(error => {
       console.log(error);
     });			

@@ -263,7 +263,8 @@ router.get('/details', function(req, res, next) {
     res.json(user);
   })
   .catch(function(err) {
-      console.log(err);
+    console.log(err);
+    return res.status(500).send('Error occured.');
   });
 });
 
