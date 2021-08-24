@@ -16,7 +16,7 @@ module.exports = {
             description: "Tombolo application",
             email: process.env.EMAIL,
             owner: process.env.OWNER,
-            clientId: process.env.TOMBOLO_CLIENT_ID,
+            clientId: process.env.AUTHSERVICE_TOMBOLO_CLIENT_ID,
             CreatedAt: new Date(),
             updatedAt: new Date(),
             applicationType: "Tombolo",

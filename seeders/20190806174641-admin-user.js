@@ -4,6 +4,10 @@ require("dotenv").config();
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
+    return queryInterface.sequelize.query(
+      'select * from Users where username="admin" and deletedAt is null', {
+      type: queryInterface.sequelize.QueryTypes.SELECT
+    }).then(application => {
     return queryInterface.bulkInsert('Users', [{
       firstName : 'admin',
       lastName : 'admin',
