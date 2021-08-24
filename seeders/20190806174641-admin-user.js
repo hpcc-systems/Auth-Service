@@ -1,14 +1,15 @@
 'use strict';
 var bcrypt = require('bcryptjs');
+require("dotenv").config();
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.bulkInsert('Users', [{
-      firstName : '<admin account first name>',
-      lastName : '<admin account last name>',
-      username : '<admin account user name>',
-      email : '<admin account email address>',
-      password: bcrypt.hashSync('<admin account password>', 10),
+      firstName : 'admin',
+      lastName : 'admin',
+      username : 'admin',
+      email : 'admin@authservice.com',
+      password: bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10),
       createdAt : new Date(),
       updatedAt : new Date()
     }], {});

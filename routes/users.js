@@ -255,15 +255,16 @@ router.post('/signout', (req, res) => {
 });
 
 router.get('/details', function(req, res, next) {
-  User.findOne({where:{
-    "id": req.query.id
+  User.findAll({where:{
+    "username": {[Sequelize.Op.in]: req.query.usernames.split(',')}
   }, 
   attributes: { exclude: ["password", "createdAt", "updatedAt"] }, 
   include:[{model: models.Role, attributes:{ exclude: ["createdAt", "updatedAt"]}}, {model: models.Application, attributes:{ exclude: ["createdAt", "updatedAt"]}}]}).then(function(user) {
     res.json(user);
   })
   .catch(function(err) {
-      console.log(err);
+    console.log(err);
+    return res.status(500).send('Error occured.');
   });
 });
 
