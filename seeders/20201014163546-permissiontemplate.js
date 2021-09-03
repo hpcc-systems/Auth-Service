@@ -700,6 +700,19 @@ module.exports = {
                 }],
                 "key": "DeleteFiles",
                 "field_type": "radio"
+              },
+              {
+                "name": "View PII",
+                "description": "View file preview in Tombolo",
+                "ui_values": [{
+                  "value": "Deny",
+                  "description": ""
+                },{
+                  "value": "allow",
+                  "description": "Can preview files"
+                }],
+                "key": "View PII",
+                "field_type": "radio"
               }
             ]
           },

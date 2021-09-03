@@ -25,7 +25,7 @@ module.exports = {
                 EditDataflow: "edit",
                 DeleteDataflow: "delete",
                 ReadDataflowInstance: "add",
-               "View PII": "allow"
+                "View PII": "allow"
               }),
             }            
           ]);

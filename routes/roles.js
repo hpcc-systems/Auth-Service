@@ -65,6 +65,7 @@ router.put('/', [
   });  
 });
 
+
 router.get('/all', function(req, res, next) {
   Role.findAll({order: [['createdAt', 'DESC']]}).then((result) => {  	  	
 	  res.json(result);
