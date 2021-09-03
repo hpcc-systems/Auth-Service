@@ -25,6 +25,7 @@ module.exports = {
                 EditDataflow: "edit",
                 DeleteDataflow: "delete",
                 ReadDataflowInstance: "add",
+                "View PII": "allow"
               }),
             }            
           ]);
@@ -49,7 +50,7 @@ module.exports = {
               DeleteFiles: "delete",
               EditDataflow: "edit",
               DeleteDataflow: "delete",
-              ReadDataflowInstance: "add",
+              ReadDataflowInstance: "add"
             })
           }]);         
         }    

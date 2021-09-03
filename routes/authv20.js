@@ -129,6 +129,7 @@ router.post('/login', [
     return res.status(422).json({ error: "Invalid input" });
   }
   console.log('URL: '+req.protocol + '://' + req.get('host') + req.originalUrl);
+
   try {
     let user = await validateUser(req.body.username, req.body.password, req.body.nonce);
     // PRIVATE  	

@@ -46,7 +46,6 @@ router.post('/login', [
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-
   User.findOne({
     where: {
       username: req.body.username
@@ -207,13 +206,12 @@ router.post('/registerUser', [
       }
     }).then(async function(result) {
       let application = await findApplication(req.body.clientId);
-      console.log("applicationId: "+application.id)
+      console.log("applicationId: "+application.id);
       //update scenario
       if(!result[1]) {
         let missingRoleFound = false;
-        let roles = await Role.findOne({where: {"name":req.body.role}})          
-        console.log('roles found: '+roles.length);
-        
+        let roles = await Role.findOne({where: {"name":req.body.role}}) 
+          
         UserRoles.findOrCreate({
           where: {userId: result[0].id, roleId:roles.id, applicationId: application.id},
           defaults: {
