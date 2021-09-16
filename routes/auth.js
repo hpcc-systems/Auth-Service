@@ -14,7 +14,6 @@ let Permissions = models.Permission;
 let Audit = models.Audit;
 let Application = models.Application;
 let PasswordReset = models.PasswordReset;
-const jwksClient = require('jwks-rsa');
 const NotificationModule = require('../utils/notifications');
 const { body, query, check, validationResult } = require('express-validator');
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {    
