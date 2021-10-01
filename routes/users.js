@@ -197,7 +197,8 @@ router.post('/changepwd', [
       //Temperory: check if it is a bcrypt hashed password (old user accounts)
       let bcryptPasswordIsValid = bcrypt.compareSync(req.body.oldpassword, user.password);
       if(!bcryptPasswordIsValid) {
-        throw new Error("Invalid Password!")  
+        //throw new Error("Invalid Password!")  
+        return res.status(500).send({'message': 'Invalid current password'});
       } 
     }    
 
