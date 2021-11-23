@@ -1,0 +1,4 @@
+sequelize-data.json
+/node_modules
+/mysql-data
+/client

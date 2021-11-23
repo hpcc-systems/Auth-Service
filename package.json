@@ -4,7 +4,13 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "auth": "concurrently \"nodemon app.js\" \"cd client && npm start\"",
+    "bootstrap": "(npm install) && (npm run createSchema) && (npm run migrations) && (npm run seeds) && (npm run intallClient)",
+    "intallClient": "cd client && npm install",
+    "createSchema": "npx sequelize db:create authservice1",
+    "migrations": "npx sequelize db:create authservice1",
+    "seeds": "npx sequelize db:seed:all"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -24,6 +30,7 @@
     "sequelize-cli": "^5.5.1"
   },
   "devDependencies": {
+    "concurrently": "^6.4.0",
     "nodemon": "^2.0.7"
   }
 }
