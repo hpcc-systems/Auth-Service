@@ -8,8 +8,8 @@
     "auth": "concurrently \"nodemon app.js\" \"cd client && npm start\"",
     "bootstrap": "(npm install) && (npm run createSchema) && (npm run migrations) && (npm run seeds) && (npm run intallClient)",
     "intallClient": "cd client && npm install",
-    "createSchema": "npx sequelize db:create authservice1",
-    "migrations": "npx sequelize db:create authservice1",
+    "createSchema": "npx sequelize db:create authservice",
+    "migrations": "npx sequelize db:migrate",
     "seeds": "npx sequelize db:seed:all"
   },
   "dependencies": {
