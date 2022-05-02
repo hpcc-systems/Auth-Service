@@ -138,8 +138,8 @@ router.post('/login', [
     payload.aud = req.body.client_id;
     payload.sub = user.username;
     payload.iat = Math.floor(Date.now() / 1000);
-    //payload.exp = Math.floor(Date.now() / 1000) + (60 * 15);
-    payload.exp = '24h'
+    payload.exp = Math.floor(Date.now() / 1000) + (86400);//24h
+    //payload.exp = '24h'
     payload.nonce = req.body.nonce;
 
     let permissions = await getPermissions(user, req.body.client_id);
@@ -198,8 +198,8 @@ router.post('/tokenrefresh', [
         payload.aud = req.body.client_id;
         payload.sub = user.username;
         payload.iat = Math.floor(Date.now() / 1000);
-        //payload.exp = Math.floor(Date.now() / 1000) + (60 * 15);    
-        payload.exp = '24h';
+        payload.exp = Math.floor(Date.now() / 1000) + (86400);    
+        //payload.exp = '24h';
         //payload.nonce = req.body.nonce;
         let permissions = await getPermissions(user, req.body.client_id);
         let fullPayload = {
