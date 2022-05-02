@@ -11,9 +11,9 @@ A JWT token based authentication service. Tokens are signed and verified via key
    - Provide key names and modify Ports if required
    - For SSL, provide CERT_PATH value and update nginx config, go to `client/nginx/conf.d/nginx.conf.template` fill in coresponding values on line 4 and 5.
    - If you do not use SSL, comment out line 3, 4, 5 in `client/nginx/conf.d/nginx.conf.template` ex. `# ssl_certificate <cert_path.pem>;`.
-4. Provide admin account info in `/seeders/20190806174641-admin-user.js` file
-5. Run `docker-compose up -d`
-6. The user interface to manage users should be available at http(s)://<hostname>:<WEB_EXPOSED_PORT> once the application starts up successfully.
+   - Provide ADMIN_PASSWORD in .env
+4. Run `docker-compose up -d`
+5. The user interface to manage users should be available at http(s)://<hostname>:<WEB_EXPOSED_PORT> once the application starts up successfully.
 
 ### Development Setup:
 
