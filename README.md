@@ -6,12 +6,15 @@ A JWT token based authentication service. Tokens are signed and verified via key
 
 1. Clone the repository
 2. Create a Private/Public key pairs and store them under /keys directory (Public key should be a .pem file).
+   1. tools like openssl can be used to generate the key pair. this key pair will be used to sign the auth token
+   2. to extract the pub key from existing private key, please use openssl rsa -in <private key> -pubout -out <public key>.pem
 3. Rename .env.sample to .env.
    - Provide the database details in .env file
    - Provide key names and modify Ports if required
-   - For SSL, provide CERT_PATH value and update nginx config, go to `client/nginx/conf.d/nginx.conf.template` fill in coresponding values on line 4 and 5.
+   - To enable SSL for AuthService URL, provide CERT_PATH value and update nginx config, go to `client/nginx/conf.d/nginx.conf.template` fill in coresponding values on line 4 and 5.
    - If you do not use SSL, comment out line 3, 4, 5 in `client/nginx/conf.d/nginx.conf.template` ex. `# ssl_certificate <cert_path.pem>;`.
    - Provide ADMIN_PASSWORD in .env
+   - HOST_PORT - This the FQDN (<http/https>:<hostname>:<port>) of AuthService. This will be used in the token
 4. Run `docker-compose up -d`
 5. The user interface to manage users should be available at http(s)://<hostname>:<WEB_EXPOSED_PORT> once the application starts up successfully.
 
