@@ -25,9 +25,8 @@ services:
       - ${DB_PORT}:3306
     environment:
       MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_USER: ${DB_USERNAME}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_HOST: ${DB_HOSTNAME}
     networks:
       - authservice-network
@@ -48,7 +47,7 @@ services:
       - ${WEB_PORT}:${WEB_PORT}
       - ${WEB_EXPOSED_PORT}:${WEB_EXPOSED_PORT}
     volumes:
-      - ${CERT_PATH}:/etc/ssl/certs
+      - ${CERT_PATH}:/etc/ssl
     depends_on:
       - auth_mysql_db
     entrypoint: [sh, /etc/nginx/run_nginx.sh, "${HOST_HOSTNAME}"]  

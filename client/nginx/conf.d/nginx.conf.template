@@ -1,6 +1,6 @@
 server {
-  listen $WEB_EXPOSED_PORT;
-  ssl on;
+  # listen $WEB_EXPOSED_PORT;
+  listen $WEB_EXPOSED_PORT ssl on;
   ssl_certificate <cert_path.pem>;
   ssl_certificate_key <cert_path.key>;
   server_name $HOSTNAME;
