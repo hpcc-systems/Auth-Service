@@ -9,8 +9,9 @@ A JWT token based authentication service. Tokens are signed and verified via key
    1. To create private key run `openssl genrsa -out ./private_key 4096` 
    2. To extract private key run `openssl rsa -in private_key -pubout -outform PEM -out public_key.pem`
 3. Rename .env.sample to .env.
-4. Open the .env file and update necessary values. If you are not sure what values to enter, refer the comments on each section.
-    - Change the SSL related variables only if you are using SSL. If not using SSL, you don't have to change.
+4. Open the .env file and update necessary values. 
+    > **Important**: If you are not sure what values to enter, refer the comments on each section.
+    Change the SSL related variables only if you are using SSL. If not using SSL, you don't have to change.
 5. To enable SSL for AuthService URL, provide CERT_PATH value and update nginx config, 
     - Go to `client/nginx/conf.d/nginx.conf.template` fill in corresponding values on line 4 and 5.
     - If you do not use SSL, comment out line 3, 4, 5 in `client/nginx/conf.d/nginx.conf.template` and un-comment line 2.
