@@ -20,8 +20,8 @@ const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   return `${location}[${param}]: ${msg}`;
 };
 const privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/' + process.env["PRIVATE_KEY_NAME"]), 'utf8');
-
-
+let Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 
 let hashPassword = (password) => {
   let salt = password.substring(0, 2);
@@ -170,79 +170,73 @@ router.post('/verify', function(req, res, next) {
   }
 });
 
+// REGISTER USER
 router.post('/registerUser', [
   body('firstName')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid First Name'),
-  body('lastName').optional({checkFalsy:true})
+  body('lastName')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Last Name'),
   body('username')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
-  body('email').optional({checkFalsy:true})
+  body('email')
     .isEmail().withMessage('Invalid Email Address'),
   body('organization').optional({checkFalsy:true})
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),        
-  body('password').optional({checkFalsy:true}).isLength({ min: 4 })  
-], (req, res) => {
+  body('password').isLength({ min: 4 })  
+], async (req, res) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  var fieldsToUpdate={}, hash;
   try {
-    if (req.body.password) {
-        hash = bcrypt.hashSync(req.body.password, 10);
-    }
-    User.findOrCreate({
-      where: {username: req.body.username},
+    const [user, isCreated] = await User.findOrCreate({
+      where: {[Op.or]: [{username: req.body.username}, {email : req.body.email}]},
       include: [{model:Role}],
       defaults: {
         "firstName": req.body.firstName,
         "lastName": req.body.lastName,
         "username": req.body.username,
-        "password": hash,
+        "password": bcrypt.hashSync(req.body.password, 10),
         "email": req.body.email,
         "organization": req.body.organization
       }
-    }).then(async function(result) {
-      let application = await findApplication(req.body.clientId);
-      console.log("applicationId: "+application.id);
-      //update scenario
-      if(!result[1]) {
-        let missingRoleFound = false;
-        let roles = await Role.findOne({where: {"name":req.body.role}}) 
-          
-        UserRoles.findOrCreate({
-          where: {userId: result[0].id, roleId:roles.id, applicationId: application.id},
-          defaults: {
-            "userId": result[0].id,
-            "roleId": roles.id,  
-            "applicationId": application.id,
-            "priority": 1
-          }
-        }).then((result) => {
-          if(!result[1]) {
-            return res.status(500).json({ error: 'There is already a user account associated with this user name' });  
-          } else {
-            res.status(202).json({"success":"true"});             
-          }
-        })
-    } else {  
-      let roles = await Role.findOne({where: {"name":req.body.role}})          
-      await UserRoles.create({
-        "userId": result[0].id,
-        "roleId": roles.id,  
-        "applicationId": application.id,
-        "priority": 1
-      })
-      res.status(201).json({"success":"true"});             
-    }  
-    }), function(err) {
-      console.log(err)
-      return res.status(500).send(err);
+  })
+
+    const role = await Role.findOne({where: {"name":req.body.role}});
+    const application = await Application.findOne({where : {"clientId" : req.body.clientId}});
+    const userRoleOptions = {
+      userId: user.id,
+      roleId : role.id,
+      applicationId: application.id,
+      priority : 1
     }
+
+    if(!isCreated){
+      // User already exists -> check if user us trying to register with new role 
+      let [userRole, userRoleCreated] = await UserRoles.findOrCreate({
+        where: {userId: user.id, roleId: role.id, applicationId : application.id},
+        defaults : userRoleOptions
+      });
+
+      if(userRoleCreated){
+        return res.status(200).json({success: true, message: 'Registration successful'});
+      }else{
+        let whatMatched;
+        if(user.email === req.body.email && user.username === req.body.username){whatMatched = 'Email and Username';}
+        else if(user.email === req.body.email){whatMatched = 'Email'; }
+        else if(user.username === req.body.username){whatMatched = 'Username';}
+        console.log(`[User registration Failed] :  user with same ${whatMatched} already exists`)
+        return res.status(409).json({success: false, message : `Account with ${whatMatched} you entered already exists`});
+      }
+    }
+
+    //If user does not already exist -> the user is created. Next make entry to UserRoles table
+    UserRoles.create(userRoleOptions);
+
+    res.status(200).json({success: true, message: 'Registration successful'});
   } catch (err) {
-    console.log('err', err);
-    return res.status(500).send(err);
+    console.log('[routes/auth.js/registerUser]', err);
+    return res.status(500).json({success: false, message: err.message})
   }
 });
 
