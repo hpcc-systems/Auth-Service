@@ -189,6 +189,8 @@ router.post('/registerUser', [
     return res.status(422).json({ success: false, errors: errors.array() });
   }
   try {
+    // Attempting to add user. if user with username or email already exists, it returns the user object
+    // If it no user with matching username or email found, it creates one and returns isCreated = true
     const [user, isCreated] = await User.findOrCreate({
       where: {[Op.or]: [{username: req.body.username}, {email : req.body.email}]},
       include: [{model:Role}],
@@ -202,8 +204,13 @@ router.post('/registerUser', [
       }
   })
 
+   // The register user payload come with user role. find the user role so the id can be used to create userRole
     const role = await Role.findOne({where: {"name":req.body.role}});
+
+    // The register user payload comes with client ID. Grab that app id. It is needed for userRole
     const application = await Application.findOne({where : {"clientId" : req.body.clientId}});
+
+    // User role options 
     const userRoleOptions = {
       userId: user.id,
       roleId : role.id,
@@ -212,27 +219,24 @@ router.post('/registerUser', [
     }
 
     if(!isCreated){
-      // User already exists -> check if user us trying to register with new role 
+      /* User already exists -> check if user us trying to register with new role. If user is trying to register with a new role, create user role.  if user is trying to 
+      register with a duplicate role return userRoleCreated = false */
       let [userRole, userRoleCreated] = await UserRoles.findOrCreate({
         where: {userId: user.id, roleId: role.id, applicationId : application.id},
         defaults : userRoleOptions
       });
 
       if(userRoleCreated){
+        // If the user role was created, return success
         return res.status(200).json({success: true, message: 'Registration successful'});
       }else{
-        let whatMatched;
-        if(user.email === req.body.email && user.username === req.body.username){whatMatched = 'Email and Username';}
-        else if(user.email === req.body.email){whatMatched = 'Email'; }
-        else if(user.username === req.body.username){whatMatched = 'Username';}
-        console.log(`[User registration Failed] :  user with same ${whatMatched} already exists`)
-        return res.status(409).json({success: false, message : `Account with ${whatMatched} you entered already exists`});
+        // If the user is trying to register for the role they already have, return failure
+        return res.status(409).json({success: false, message : `Account with username/email you entered already exists`});
       }
     }
 
-    //If user does not already exist -> the user is created. Next make entry to UserRoles table
-    UserRoles.create(userRoleOptions);
-
+    //If the payload came with unique username and pw - user is already created. Next make entry to UserRoles table and return success
+    await UserRoles.create(userRoleOptions);
     res.status(200).json({success: true, message: 'Registration successful'});
   } catch (err) {
     console.log('[routes/auth.js/registerUser]', err);
