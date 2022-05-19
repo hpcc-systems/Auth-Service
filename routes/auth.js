@@ -219,7 +219,7 @@ router.post('/registerUser', [
     }
 
     if(!isCreated){
-      /* User already exists -> check if user us trying to register with new role. If user is trying to register with a new role, create user role.  if user is trying to 
+      /* User already exists -> check if user is trying to register with new role. If user is trying to register with a new role, create user role.  if user is trying to 
       register with a duplicate role return userRoleCreated = false */
       let [userRole, userRoleCreated] = await UserRoles.findOrCreate({
         where: {userId: user.id, roleId: role.id, applicationId : application.id},
@@ -235,7 +235,7 @@ router.post('/registerUser', [
       }
     }
 
-    //If the payload came with unique username and pw - user is already created. Next make entry to UserRoles table and return success
+    //If the payload came with unique username or E-mail - user is already created. Next make entry to UserRoles table and return success
     await UserRoles.create(userRoleOptions);
     res.status(200).json({success: true, message: 'Registration successful'});
   } catch (err) {
