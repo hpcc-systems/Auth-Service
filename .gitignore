@@ -8,3 +8,5 @@
 !**/keys/.gitkeep
 sequelize-data.json
 .env
+.prettierignore
+SEEDERS_TEMP

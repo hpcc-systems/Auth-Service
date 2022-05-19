@@ -206,6 +206,89 @@ module.exports = {
               ],
               "field_type": "radio",
               "description": ""
+            },
+            {
+              "key": "EclDirectAccess",
+              "name": "ECL Direct Access",
+              "ui_values": [
+                {
+                  "displayValue": "Default",
+                  "value": "Default",
+                  "description": ""
+                },
+                {
+                  "displayValue": "Deny",
+                  "value": "None",
+                  "default": true,
+                  "description": ""
+                },
+                {
+                  "displayValue": "Allow",
+                  "value": "Full",
+                  "description": ""
+                }
+              ],
+              "field_type": "radio",
+              "description": "Access to ECL direct service"
+            },
+            {
+              "key": "ESDLConfigAccess",
+              "name": "ESDL Config Access",
+              "ui_values": [
+                {
+                  "displayValue": "Default",
+                  "value": "Default",
+                  "description": ""
+                },
+                {
+                  "displayValue": "Deny",
+                  "value": "None",
+                  "default": true,
+                  "description": ""
+                },
+                {
+                  "displayValue": "Read",
+                  "value": "Read",
+                  "description": ""
+                },
+                {
+                  "displayValue": "Write",
+                  "value": "Write",
+                  "description": ""
+                },
+                {
+                  "displayValue": "Full",
+                  "value": "Full",
+                  "description": ""
+                }
+              ],
+              "field_type": "radio",
+              "description": "ESDL Config Access"
+            },
+            {
+              "key": "WsLogAccess",
+              "name": "Ws Log Access",
+              "ui_values": [
+                {
+                  "displayValue": "Default",
+                  "value": "Default",
+                  "description": ""
+                },
+                {
+                  "displayValue": "Deny",
+                  "value": "None",
+                  "default": true,
+                  "description": ""
+                },
+                {
+                  "displayValue": "Allow",
+                  "value": "Read",
+                  "description": "" 
+                },
+            
+              ],
+              "field_type": "radio",
+              "description": "Allows ability to read component logs"
             }
           ]
         },
@@ -592,6 +675,40 @@ module.exports = {
               ],
               "field_type": "radio",
               "description": "DFU Access"
+            },
+            {
+              "key": "FileSprayAccess",
+              "name": "File Spray Access",
+              "ui_values": [
+                {
+                  "displayValue": "Default",
+                  "value": "Default",
+                  "description": ""
+                },
+                {
+                  "displayValue": "Deny",
+                  "value": "None",
+                  "default": true,
+                  "description": "Deny File Spray"
+                },
+                {
+                  "displayValue": "Read",
+                  "value": "Read",
+                  "description": "Read File Spray"
+                },
+                {
+                  "displayValue": "Create",
+                  "value": "Write",
+                  "description": "Create File Spray"
+                },
+                {
+                  "displayValue": "Full",
+                  "value": "Full",
+                  "description": "Full Access to File Spray"
+                }
+              ],
+              "field_type": "radio",
+              "description": "Access to Spraying and Copying"
             },
             {
               "key": "FileDesprayAccess",
