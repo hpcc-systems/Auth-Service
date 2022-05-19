@@ -697,7 +697,7 @@ module.exports = {
                   "description": "Read File Spray"
                 },
                 {
-                  "displayValue": "Create",
+                  "displayValue": "Write",
                   "value": "Write",
                   "description": "Create File Spray"
                 },
