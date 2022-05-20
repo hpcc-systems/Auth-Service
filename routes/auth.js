@@ -20,8 +20,8 @@ const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   return `${location}[${param}]: ${msg}`;
 };
 const privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/' + process.env["PRIVATE_KEY_NAME"]), 'utf8');
-
-
+let Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 
 let hashPassword = (password) => {
   let salt = password.substring(0, 2);
@@ -170,79 +170,77 @@ router.post('/verify', function(req, res, next) {
   }
 });
 
+// REGISTER USER
 router.post('/registerUser', [
   body('firstName')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid First Name'),
-  body('lastName').optional({checkFalsy:true})
+  body('lastName')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Last Name'),
   body('username')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
-  body('email').optional({checkFalsy:true})
+  body('email')
     .isEmail().withMessage('Invalid Email Address'),
   body('organization').optional({checkFalsy:true})
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),        
-  body('password').optional({checkFalsy:true}).isLength({ min: 4 })  
-], (req, res) => {
+  body('password').isLength({ min: 4 })  
+], async (req, res) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
-  var fieldsToUpdate={}, hash;
   try {
-    if (req.body.password) {
-        hash = bcrypt.hashSync(req.body.password, 10);
-    }
-    User.findOrCreate({
-      where: {username: req.body.username},
+    // Attempting to add user. if user with username or email already exists, it returns the user object
+    // If it no user with matching username or email found, it creates one and returns isCreated = true
+    const [user, isCreated] = await User.findOrCreate({
+      where: {[Op.or]: [{username: req.body.username}, {email : req.body.email}]},
       include: [{model:Role}],
       defaults: {
         "firstName": req.body.firstName,
         "lastName": req.body.lastName,
         "username": req.body.username,
-        "password": hash,
+        "password": bcrypt.hashSync(req.body.password, 10),
         "email": req.body.email,
         "organization": req.body.organization
       }
-    }).then(async function(result) {
-      let application = await findApplication(req.body.clientId);
-      console.log("applicationId: "+application.id);
-      //update scenario
-      if(!result[1]) {
-        let missingRoleFound = false;
-        let roles = await Role.findOne({where: {"name":req.body.role}}) 
-          
-        UserRoles.findOrCreate({
-          where: {userId: result[0].id, roleId:roles.id, applicationId: application.id},
-          defaults: {
-            "userId": result[0].id,
-            "roleId": roles.id,  
-            "applicationId": application.id,
-            "priority": 1
-          }
-        }).then((result) => {
-          if(!result[1]) {
-            return res.status(500).json({ error: 'There is already a user account associated with this user name' });  
-          } else {
-            res.status(202).json({"success":"true"});             
-          }
-        })
-    } else {  
-      let roles = await Role.findOne({where: {"name":req.body.role}})          
-      await UserRoles.create({
-        "userId": result[0].id,
-        "roleId": roles.id,  
-        "applicationId": application.id,
-        "priority": 1
-      })
-      res.status(201).json({"success":"true"});             
-    }  
-    }), function(err) {
-      console.log(err)
-      return res.status(500).send(err);
+  })
+
+   // The register user payload come with user role. find the user role so the id can be used to create userRole
+    const role = await Role.findOne({where: {"name":req.body.role}});
+
+    // The register user payload comes with client ID. Grab that app id. It is needed for userRole
+    const application = await Application.findOne({where : {"clientId" : req.body.clientId}});
+
+    // User role options 
+    const userRoleOptions = {
+      userId: user.id,
+      roleId : role.id,
+      applicationId: application.id,
+      priority : 1
     }
+
+    if(!isCreated){
+      /* User already exists -> check if user is trying to register with new role. If user is trying to register with a new role, create user role.  if user is trying to 
+      register with a duplicate role return userRoleCreated = false */
+      let [userRole, userRoleCreated] = await UserRoles.findOrCreate({
+        where: {userId: user.id, roleId: role.id, applicationId : application.id},
+        defaults : userRoleOptions
+      });
+
+      if(userRoleCreated){
+        // If the user role was created, return success
+        return res.status(200).json({success: true, message: 'Registration successful'});
+      }else{
+        // If the user is trying to register for the role they already have, return failure
+        return res.status(409).json({success: false, message : `Account with username/email you entered already exists`});
+      }
+    }
+
+    //If the payload came with unique username or E-mail - user is already created. Next make entry to UserRoles table and return success
+    await UserRoles.create(userRoleOptions);
+    res.status(200).json({success: true, message: 'Registration successful'});
   } catch (err) {
-    console.log('err', err);
-    return res.status(500).send(err);
+    console.log('[routes/auth.js/registerUser]', err);
+    return res.status(500).json({success: false, message: err.message})
   }
 });
 

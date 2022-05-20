@@ -412,8 +412,8 @@ function UserDetails() {
 			          label="Password"
 			          name="password"
 			          required
-			          tooltip={<Tooltip><span>Password has to be atleast 4 characters long!.</span></Tooltip>}			          
-			          rules={[{ min: 4, message: 'Password has to be atleast 4 characters long!'}, { required: true, message: 'Please enter password!' }]}
+			          tooltip={<Tooltip><span>Password has to be at least 4 characters long!.</span></Tooltip>}			          
+			          rules={[{ min: 4, message: 'Password has to be at least 4 characters long!'}, { required: true, message: 'Please enter password!' }]}
 			        >
 			        	<Input type="password"/>
 			        </Form.Item>
@@ -423,7 +423,17 @@ function UserDetails() {
 			          label="Confirm Password"
 			          name="confirmPassword"		 
 			          required
-			          rules={[{ required: true, message: 'Please confirm password!' }, { min: 4, message: 'Password has to be atleast 4 characters long!' }]}         
+			          rules={[
+						  { required: true, message: 'Please confirm password!' }, { min: 4, message: 'Password has to be at least 4 characters long!' },
+						  ({ getFieldValue }) => ({
+								validator(_, value) {
+								if (!value || getFieldValue('password') === value) {
+									return Promise.resolve();
+								}
+								return Promise.reject(new Error('The two passwords that you entered do not match!'));
+							},
+							})
+						]}         
 			        >
 			          <Input type="password"/>
 			        </Form.Item>
