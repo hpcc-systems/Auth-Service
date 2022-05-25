@@ -230,20 +230,16 @@ function RoleDetails() {
 					        						<Form.List name={permissionType.key}>
 												        {(fields, { add, remove }) => {												        	
 												          return (												          	
-												            <div>												            
+												            <div className='role_details_file_inputs'>												            
 												              {fields.map((field, index) => (
 												                <Form.Item										                  
 												                  required={false}
-												                  key={permissionType.key}												                  
+												                  key={permissionType.key}	
 												                >
 												                  <span style={{"display": "-webkit-inline-box"}}>
-													                  <Form.Item
-													                    {...field}										                  
-
-													                  >
+													                  <Form.Item {...field}>
 													                    <Input placeholder="" name={permissionType.key}  style={{ width: '180px' }} />
 													                  </Form.Item>  
-													                    {fields.length > 1 ? (
 													                    <MinusCircleOutlined
 													                      className="dynamic-delete-button"
 													                      style={{ margin: '0 8px' }}
@@ -251,7 +247,6 @@ function RoleDetails() {
 													                        remove(field.name);
 													                      }}
 													                    />
-													                  ) : null}
 													                  </span>
 												                  
 												                </Form.Item>
@@ -262,10 +257,10 @@ function RoleDetails() {
 												                  onClick={() => {
 												                    add();
 												                  }}
-												                  style={{ width: '90px' }}
+												                  style={{ width: '90px', margin : '0px' }}
 												                >
 												                  <PlusOutlined /> Add
-												                </Button>										                
+												                </Button>	
 												              </Form.Item>
 												            </div>
 												          );
