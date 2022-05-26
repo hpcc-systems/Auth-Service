@@ -97,3 +97,6 @@ code {
   text-align: center!important;
 }
 
+.role_details_file_inputs>.ant-form-item{
+  margin-bottom: -10px;
+}
