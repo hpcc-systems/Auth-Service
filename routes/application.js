@@ -22,21 +22,30 @@ router.post('/', [
   body('owner')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid Owner Name'),
   body('clientId')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid Client Id'),    
+    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).withMessage('Invalid Client Id'),  
+   body('tokenTtl')
+    .matches(/^[0-9]*$/)
+    .withMessage('Invalid Token TTL')
 ], (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
 
-	let appObj = req.body;
+  const {tokenTtl, name, description, email, owner, applicationType, clientId} = req.body;
+
+  if(tokenTtl && (tokenTtl < 300 || tokenTtl > 1440)){
+    return res.status(422).json({success: false, message: 'Token TTL must be between 300 and 1440'})
+  }
+
   Application.create({
-    "name": appObj.name,
-    "description": appObj.description,
-    "email": appObj.email,
-    "owner": appObj.owner,
-    "applicationType": appObj.applicationType,
-    "clientId": appObj.clientId
+    "name": name,
+    "description": description,
+    "email": email,
+    "owner": owner,
+    "applicationType": applicationType,
+    "clientId": clientId,
+    "tokenTtl": tokenTtl
   }).then((result) => {
   	res.json({"result":"success"});
   }).catch(function(err) {
