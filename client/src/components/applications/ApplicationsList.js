@@ -65,7 +65,7 @@ function ApplicationsList() {
     dataIndex: 'name',
     key: 'name',
     ...getColumnSearchProps('name'),
-    render: (text, record) => <a href='#/' onClick={(row) => handleEdit(record.id)}>{text}</a>
+    render: (text, record) => <a href='/#' onClick={(row) => handleEdit(record.id)}>{text}</a>
   },
   {
     title: 'Application Type',
@@ -99,10 +99,10 @@ function ApplicationsList() {
     dataIndex: '',
     render: (text, record) =>
       <span>
-        <a href="#/" onClick={(row) => handleEdit(record.id)}><Tooltip placement="right" title={"View Details"}><EditOutlined /></Tooltip></a>
+        <a href="/#" onClick={(row) => handleEdit(record.id)}><Tooltip placement="right" title={"View Details"}><EditOutlined /></Tooltip></a>
         <Divider type="vertical" />
         <Popconfirm title="Are you sure you want to delete this application?" onConfirm={() => handleDelete(record.id)}> 
-          <a href="#/"><Tooltip placement="right" title={"Delete Application"}><DeleteOutlined /></Tooltip></a>
+          <a href="/#"><Tooltip placement="right" title={"Delete Application"}><DeleteOutlined /></Tooltip></a>
         </Popconfirm>        
       </span>
   }

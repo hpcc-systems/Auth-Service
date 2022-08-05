@@ -82,7 +82,7 @@ function UsersList() {
     dataIndex: 'firstName',
     key: 'firstName',
     ...getColumnSearchProps('firstName'),    
-    render: (text, record) => <a href='#/' onClick={(row) => handleEdit(record)}>{record.firstName + " " + record.lastName}</a>
+    render: (text, record) => <a href='/#' onClick={(row) => handleEdit(record)}>{record.firstName + " " + record.lastName}</a>
   },
   {
     title: 'User Name',
@@ -110,12 +110,12 @@ function UsersList() {
     dataIndex: '',
     render: (text, record) =>
       <span>
-        <a href="#/" onClick={(row) => handleEdit(record)}><Tooltip placement="right" title={"View Details"}><EditOutlined /></Tooltip></a>
+        <a href="/#" onClick={(row) => handleEdit(record)}><Tooltip placement="right" title={"View Details"}><EditOutlined /></Tooltip></a>
         <Divider type="vertical" />
-        <a href="#/" onClick={(row) => handleChangePassword(record)}><Tooltip placement="right" title={"Change Password"}><KeyOutlined /></Tooltip></a>
+        <a href="/#" onClick={(row) => handleChangePassword(record)}><Tooltip placement="right" title={"Change Password"}><KeyOutlined /></Tooltip></a>
         <Divider type="vertical" />
         <Popconfirm title="Are you sure you want to delete this user?" onConfirm={() => handleDelete(record)}> 
-          <a href="#/"><Tooltip placement="right" title={"Delete User"}><DeleteOutlined /></Tooltip></a>
+          <a href="/#"><Tooltip placement="right" title={"Delete User"}><DeleteOutlined /></Tooltip></a>
         </Popconfirm>
       </span>
   }  

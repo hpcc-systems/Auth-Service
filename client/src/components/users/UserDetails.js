@@ -327,7 +327,7 @@ function UserDetails() {
     key: 'appName',
     className: 'drag-visible',
     ...getColumnSearchProps('applicationType'),
-    render: (text, record) => <a href='#/' >{text}</a>
+    render: (text, record) => <a href='/#' >{text}</a>
   },
   {
     title: 'Role',
@@ -347,7 +347,7 @@ function UserDetails() {
     render: (text, record) =>
       <span>
         <Popconfirm title="Are you sure you want to delete this application/role?" onConfirm={() => handleRoleDelete(record.priority)}> 
-          <a href="#/"><Tooltip placement="right" title={"Delete"}><DeleteOutlined /></Tooltip></a>
+          <a href="/#"><Tooltip placement="right" title={"Delete"}><DeleteOutlined /></Tooltip></a>
         </Popconfirm>        
       </span>
   }];  
