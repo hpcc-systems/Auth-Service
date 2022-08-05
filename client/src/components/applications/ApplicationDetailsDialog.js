@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Button, Select, Tooltip, Modal, message, Alert } from 'antd';
-import { SearchOutlined, PlusOutlined, MinusCircleOutlined  } from '@ant-design/icons';
-import { Breadcrumb } from 'antd';
+import { Form, Input, Select, Modal, message } from 'antd';
 import { Constants } from '../common/Constants';
 import { authHeader, handleErrors } from "../common/AuthHeader.js"
 const Option = Select.Option;
@@ -27,19 +25,20 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId, a
 
   useEffect(() => {       
     resetForm();
-    if(selectedApplicationId != '') {
+    if(selectedApplicationId !== '') {
       fetchApplicationDetails();    
     }
+     // eslint-disable-next-line
   }, [selectedApplicationId])
 
   const handleOk = () => {
-    if(applications.filter(application => application.clientId == applicationDetails.clientId).length > 0) {
+    if(applications.filter(application => application.clientId === applicationDetails.clientId).length > 0) {
       message.error("There is already an Application with the same Client Id, please use a different Client Id for "+applicationDetails.name);
       return;
     }
 
     fetch('/api/application', {
-      method: applicationDetails.id == '' ? 'post' : 'put',
+      method: applicationDetails.id === '' ? 'post' : 'put',
       headers: authHeader(),
       body: JSON.stringify(applicationDetails)
     })
@@ -105,7 +104,7 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId, a
   }
 
   const onApplicationTypeChange = (value) => {
-    setApplicationDetails({...applicationDetails, ['applicationType']: value})
+    setApplicationDetails({...applicationDetails, 'applicationType': value})
   }
 
 
@@ -115,6 +114,7 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId, a
           title="Application Details"
           visible={isShowing}
           onCancel={onClose}
+          forceRender // Before Modal opens, children elements do not exist in the view.forceRender pre-renders its children. if not done browser console error -  'Instance created by `useForm` is not connected to any Form element'
           width={800}
           onOk={() => {
             form

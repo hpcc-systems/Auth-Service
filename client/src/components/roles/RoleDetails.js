@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Table, Tabs, Form, Input, Button, Select, Typography, Radio, Tooltip, Row, Col, message } from 'antd';
-import { SearchOutlined, PlusOutlined, MinusCircleOutlined  } from '@ant-design/icons';
+import { Tabs, Form, Input, Button, Select, Typography, Radio, Row, Col, message } from 'antd';
+import {  PlusOutlined, MinusCircleOutlined  } from '@ant-design/icons';
 import { Breadcrumb } from 'antd';
+import { v4 as uuid } from 'uuid';
+
 import { Constants } from '../common/Constants';
 import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
@@ -16,13 +18,6 @@ const layout = {
   wrapperCol: { span: 16 },
   layout: "Vertical"
 };
-const formitemlayoutwithoutlabel = {
-  wrapperCol: {
-    xs: { span: 20, offset: 0 },
-    sm: { span: 16, offset: 3 },
-  },
-};
-
 
 function RoleDetails() {		
 	const [form] = Form.useForm();	
@@ -35,7 +30,6 @@ function RoleDetails() {
 	let history = useHistory();	
 
 	useEffect(() => {
-		console.log(appType);
 		const getPermissionTemplate = async () => {
 			fetch("/api/roles/permissions?applicationType="+appType, {
 	      headers: authHeader()
@@ -47,7 +41,7 @@ function RoleDetails() {
 	      	applicationType: appType	      	
 	      }
 	      setData(data);
-	      if(roleId != '') {
+	      if(roleId !== '') {
 	      	roleDetails = await getRoleDetails(roleId);
 	      	obj.rolename = roleDetails.name;
 	      	obj.description = roleDetails.description;
@@ -55,14 +49,11 @@ function RoleDetails() {
 	      }
 
 	      if(data) {
-	      	let fields = [];
 	      	if(data[0] && data[0].permissions && data[0].permissions.length > 0) {
 		      	Object.keys(data[0].permissions).forEach((permissionKey, idx) => {
 		      		data[0].permissions[permissionKey][Object.keys(data[0].permissions[permissionKey])[0]].forEach((permission) => {
-		      			console.log(JSON.stringify(permission));
-		      			console.log(permission.field_type);
-		      			if(permission.field_type == 'radio') {
-		      				let defaultValue = permission.ui_values.filter(uiValue => uiValue.default == true);
+		      			if(permission.field_type === 'radio') {
+		      				let defaultValue = permission.ui_values.filter(uiValue => uiValue.default === true);
 				      		if(roleDetails.permissions && roleDetails.permissions[permission.key]) {
 				      			initialValues.push({[permission.key]: roleDetails.permissions[permission.key]});
 				      		} else if(defaultValue && defaultValue.length > 0) {
@@ -84,7 +75,7 @@ function RoleDetails() {
 	  };
 			
 		getPermissionTemplate();
-
+  // eslint-disable-next-line
   }, [appType])
 
   const getRoleDetails = async () => {
@@ -104,7 +95,6 @@ function RoleDetails() {
 	}	
  
 	const onFinish = values => {
-		console.log(values);
     let keysToExclude = ["applicationType", "description", "managedby", "rolename"], permissions={};
     let postObj = {
     	applicationType: values.applicationType,
@@ -112,18 +102,18 @@ function RoleDetails() {
     	managedBy: values.managedby,
     	name: values.rolename
     }
-    if(roleDetails.id && roleDetails.id != '') {
+    if(roleDetails.id && roleDetails.id !== '') {
     	postObj.id=roleDetails.id;
     }
 
     Object.keys(values).forEach((key) => {
-    	if(!keysToExclude.includes(key) && values[key] != undefined) {
+    	if(!keysToExclude.includes(key) && values[key] !== undefined) {
     		permissions[key] = values[key];
     	}
     })
 		postObj.permissions = permissions;
     fetch('/api/roles', {
-      method: (!postObj.id || postObj.id == '') ? 'post' : 'put',
+      method: (!postObj.id || postObj.id === '') ? 'post' : 'put',
       headers: authHeader(),
       body: JSON.stringify(postObj)
     })
@@ -138,32 +128,12 @@ function RoleDetails() {
   };
 
   const onTabChange = key => {
-  	console.log(key)
   }
 
-  const resetForm = () => {
-  	form.resetFields();
-  }
 
   const onCancel = () => {
   	history.push('/roles');
   }
-
-  const getRadioSelectedValue = (key, uiValues) => {
-  	let selectedValue = "";
-  	//if a permission is already selected, then return that
-  	if(roleDetails.permissions && roleDetails.permissions[key]) {
-  		return roleDetails.permissions[key];
-  	}
-
-  	//look for default value
-  	uiValues.filter((uiValue) => {
-  		if(uiValue.default && uiValue.default==true) {
-  			selectedValue = uiValue.displayValue;
-  		}
-  	})
-  	return selectedValue;
-	}
 
   return (
   	<React.Fragment>
@@ -197,7 +167,7 @@ function RoleDetails() {
 				        label="Managed By"
 				        name="managedby"
 				        required
-				        rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9@ \._-]*$/), message: 'Please enter managed by information!' }]}
+				        rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9@ ._-]*$/), message: 'Please enter managed by information!' }]}
 				      >
 				        <Input style={{"width": "400px"}}/>
 				      </Form.Item>
@@ -210,31 +180,29 @@ function RoleDetails() {
 			    	</TabPane>
 			    	{
 			    		data[0].permissions.map((permissionCategory, catIdx) => 	    			    			    		
-				    		Object.keys(permissionCategory).map((category, idx) => 	    			
+				    		Object.keys(permissionCategory).map((category, idx) => 		
 				    			<TabPane tab={category} key={category} className="tab-content" forceRender={true}>		    			
 				    			{
 					    			data[0].permissions[catIdx][category].map((permissionType) => 
-					    				<React.Fragment>
-						    				<Tooltip placement="rightTop" title={permissionType.description}><Title level={4}>{permissionType.name}</Title></Tooltip>
+					    				<React.Fragment key={permissionType.name}>
+						    				<Title level={4}>{permissionType.name}</Title>
 						    				<Paragraph>{permissionType.description}</Paragraph>
 						    				<Form.Item name={permissionType.key}>
-							    				{permissionType.field_type == 'radio' ?
+							    				{permissionType.field_type === 'radio' ?
 							    					<Radio.Group name={permissionType.key} >
 							    						{permissionType.ui_values.map((uiValue) => 
-							    							<Tooltip placement="rightTop" key={uiValue.displayValue} title={uiValue.description}>
-							    								<Radio value={uiValue.value}>{uiValue.displayValue}</Radio>  				
-							    							</Tooltip>	
+							    								<Radio value={uiValue.value} key={uiValue.value}>{uiValue.displayValue}</Radio>  				
 							    						)}										  	
 							    					</Radio.Group>
 				        					: <React.Fragment>				        							
-					        						<Form.List name={permissionType.key}>
+					        						<Form.List name={permissionType.key} key={uuid()}>
 												        {(fields, { add, remove }) => {												        	
 												          return (												          	
 												            <div className='role_details_file_inputs'>												            
 												              {fields.map((field, index) => (
 												                <Form.Item										                  
 												                  required={false}
-												                  key={permissionType.key}	
+												                  key={uuid()}	
 												                >
 												                  <span style={{"display": "-webkit-inline-box"}}>
 													                  <Form.Item {...field}>

@@ -4,7 +4,7 @@ import { Table, Tooltip, Divider, Popconfirm, Button, message } from 'antd';
 import { Breadcrumb } from 'antd';
 import { EditOutlined, DeleteOutlined, FileAddOutlined, KeyOutlined } from '@ant-design/icons';
 import { useHistory } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { userActions } from '../../redux/actions/User';
 import { authHeader, handleErrors } from "../common/AuthHeader.js"
 import { Constants } from '../common/Constants';
@@ -36,6 +36,7 @@ function UsersList() {
   }
 
 	const handleEdit = (record) => {
+    console.log(record)
     dispatch(userActions.userSelected(
     	record.username
     ));
@@ -81,7 +82,7 @@ function UsersList() {
     dataIndex: 'firstName',
     key: 'firstName',
     ...getColumnSearchProps('firstName'),    
-    render: (text, record) => <a href='#' onClick={(row) => handleEdit(record)}>{record.firstName + " " + record.lastName}</a>
+    render: (text, record) => <a href='#/' onClick={(row) => handleEdit(record)}>{record.firstName + " " + record.lastName}</a>
   },
   {
     title: 'User Name',
@@ -109,12 +110,12 @@ function UsersList() {
     dataIndex: '',
     render: (text, record) =>
       <span>
-        <a href="#" onClick={(row) => handleEdit(record)}><Tooltip placement="right" title={"View Details"}><EditOutlined /></Tooltip></a>
+        <a href="#/" onClick={(row) => handleEdit(record)}><Tooltip placement="right" title={"View Details"}><EditOutlined /></Tooltip></a>
         <Divider type="vertical" />
-        <a href="#" onClick={(row) => handleChangePassword(record)}><Tooltip placement="right" title={"Change Password"}><KeyOutlined /></Tooltip></a>
+        <a href="#/" onClick={(row) => handleChangePassword(record)}><Tooltip placement="right" title={"Change Password"}><KeyOutlined /></Tooltip></a>
         <Divider type="vertical" />
         <Popconfirm title="Are you sure you want to delete this user?" onConfirm={() => handleDelete(record)}> 
-          <a href="#"><Tooltip placement="right" title={"Delete User"}><DeleteOutlined /></Tooltip></a>
+          <a href="#/"><Tooltip placement="right" title={"Delete User"}><DeleteOutlined /></Tooltip></a>
         </Popconfirm>
       </span>
   }  
@@ -126,7 +127,7 @@ function UsersList() {
 	        <Breadcrumb.Item>Users</Breadcrumb.Item>
 	      </Breadcrumb>
       	<Tooltip title="Add User">
-      		<Button className="add-button" icon={<FileAddOutlined />} onClick={handleAdd}>Add</Button>
+      		<Button className="add-button" icon={<FileAddOutlined />} onClick={handleAdd} type="primary">Add</Button>
     		</Tooltip>
 	  	<Table dataSource={data} columns={columns} rowKey={"id"}/>
       <ChangePasswordDialog isShowing={isShowing} onClose={handleClose} username={username}/>
