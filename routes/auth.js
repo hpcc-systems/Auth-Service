@@ -158,7 +158,8 @@ router.post('/registerUser', [
     .isEmail().withMessage('Invalid Email Address'),
   body('organization').optional({checkFalsy:true})
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),        
-  body('password').isLength({ min: 4 })  
+  body('password').matches(/(?=^.{8,}$)(?=.*\d)(?=.*[!@#$%^&*]+)(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/)
+    .withMessage('Invalid password, password must be minimum 8 characters, at least one uppercase, one lower case, one number and one of these special characters - @#$%^&* ')
 ], async (req, res) => {
   console.log(req.param.body)
   const errors = validationResult(req).formatWith(errorFormatter);
