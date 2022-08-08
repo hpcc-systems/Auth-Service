@@ -412,8 +412,10 @@ function UserDetails() {
 			          label="Password"
 			          name="password"
 			          required
-			          tooltip={<Tooltip><span>Password has to be at least 4 characters long!.</span></Tooltip>}			          
-			          rules={[{ min: 4, message: 'Password has to be at least 4 characters long!'}, { required: true, message: 'Please enter password!' }]}
+			           rules={[{ 
+							pattern: /(?=^.{8,}$)(?=.*\d)(?=.*[!@#$%^&*]+)(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/,
+							message: 'Password must be minimum 8 characters, at least one uppercase, one lower case, one number and one of these special characters - @#$%^&*'}, 
+							{ required: true, message: 'Please enter password!' }]}
 			        >
 			        	<Input type="password"/>
 			        </Form.Item>
