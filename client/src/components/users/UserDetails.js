@@ -327,7 +327,7 @@ function UserDetails() {
     key: 'appName',
     className: 'drag-visible',
     ...getColumnSearchProps('applicationType'),
-    render: (text, record) => <a href='/#' >{text}</a>
+    render: (text, record) => <a href='/applications' >{text}</a>
   },
   {
     title: 'Role',
@@ -347,7 +347,7 @@ function UserDetails() {
     render: (text, record) =>
       <span>
         <Popconfirm title="Are you sure you want to delete this application/role?" onConfirm={() => handleRoleDelete(record.priority)}> 
-          <a href="/#"><Tooltip placement="right" title={"Delete"}><DeleteOutlined /></Tooltip></a>
+          <span className='link-style'><Tooltip placement="right" title={"Delete"}><DeleteOutlined /></Tooltip></span>
         </Popconfirm>        
       </span>
   }];  
@@ -411,8 +411,10 @@ function UserDetails() {
 			          label="Password"
 			          name="password"
 			          required
-			          tooltip={<Tooltip><span>Password has to be at least 4 characters long!.</span></Tooltip>}			          
-			          rules={[{ min: 4, message: 'Password has to be at least 4 characters long!'}, { required: true, message: 'Please enter password!' }]}
+			           rules={[{ 
+							pattern: /(?=^.{8,}$)(?=.*\d)(?=.*[!@#$%^&*]+)(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/,
+							message: 'Password must be minimum 8 characters, at least one uppercase, one lower case, one number and one of these special characters - @#$%^&*'}, 
+							{ required: true, message: 'Please enter password!' }]}
 			        >
 			        	<Input type="password"/>
 			        </Form.Item>

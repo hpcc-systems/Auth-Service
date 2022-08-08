@@ -43,3 +43,9 @@
   font-size: 22px;
   margin: 13px;
 }
+
+/* Like like effect */
+.link-style {
+  color: #1890ff;
+  cursor: pointer;
+}

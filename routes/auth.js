@@ -23,9 +23,8 @@ const privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/' + process
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
-let hashPassword = (password) => {
+ let hashPassword = (password) => {
   let salt = password.substring(0, 2);
-  console.log(salt); 
   return crypto.createHash("sha256").update(salt+password).digest('base64');
 }
 
@@ -33,119 +32,96 @@ let findApplication = (clientId) => {
   return Application.findOne({where: {clientId:clientId}})
 }
 
-/* GET users listing. */
-router.post('/login', [
-  body('username')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
-  body('password').isLength({ min: 4 }),
-  body('clientId')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/).optional().withMessage('Invalid Client Id'),
-], (req, res) => {
-  const errors = validationResult(req).formatWith(errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  User.findOne({
-    where: {
-      username: req.body.username
-    },
-    include:[{model: models.Role},{model: models.Application}]
-  }).then(user => {
-    if (!user) {
-      throw new Error('User Not Found.');
+// LOGIN ROUTE -> if valid user found, issues a jwt token
+router.post(
+  '/login',
+  [
+    body('username')
+      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/)
+      .withMessage('Invalid User Name'),
+    body('password').isLength({ min: 4 }),
+    body('clientId')
+      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/)
+      .optional()
+      .withMessage('Invalid Client Id'),
+  ],
+  async (req, res) => {
+    //Check if errors in payload
+    const errors = validationResult(req).formatWith(errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
     }
 
-    //var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
-    //decode base64 to text before hashing
-    let passwordBuff = new Buffer(user.password);
-    //hash(stored hashed password + nonce)      
-    let passwordHash = crypto.createHash("sha256").update(passwordBuff).digest('base64')
-    let userProvidedPasswordHash = hashPassword(req.body.password)
-    var passwordIsValid = (userProvidedPasswordHash == user.password);
-    if (!passwordIsValid) {
-      //Temperory: check if it is a bcrypt hashed password (old user accounts)
-      let bcryptPasswordIsValid = bcrypt.compareSync(req.body.password, user.password);
-      if(!bcryptPasswordIsValid) {
-        throw new Error("Invalid Password!")  
-      } else {
-        //found a valid bcrypt password, change it to the new sha256 salted password
-        let newShaPassword = hashPassword(req.body.password);
-        User.update(
-          { password: newShaPassword },
-          { where: {username:req.body.username}}
-        ).then(function (updated) {
-          console.log("sha password updated");
-        })
-      }
-      console.log('bcrypt password valid');
-      //return res.status(401).send({ auth: false, accessToken: null, reason: "Invalid Password!" });      
-    }
+    //If no errors in payload 
+    const { username, password, clientId } = req.body;
+    try {
+      const user = await User.findOne({
+        where: {
+          username: username,
+          password: hashPassword(password),
+        },
+        include: [{ model: models.Role }, { model: models.Application }],
+      });
 
-    if (req.body.clientId) {
-      const hasPermission = user.Applications.some(({ clientId }) => clientId === req.body.clientId);
-      
-      if (!hasPermission) {
-        throw new Error("Unauthorized");
+      if (!user) {
+        throw new Error('User Not Found.');
       }
 
-      user.clientId = user.Applications.find(({ clientId }) => clientId === req.body.clientId).clientId;
-    }
+      let tokenTtl; // Get from application
 
-    // PRIVATE
-  	//const privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/' + process.env["PRIVATE_KEY_NAME"]), 'utf8');
+      if (clientId) {
+        const hasPermission = user.Applications.some(({ clientId: client_id }) => client_id === clientId);
+        if (!hasPermission) {
+          throw new Error('Unauthorized');
+        }
+        user.clientId = user.Applications.find(({ clientId: client_id }) => client_id === clientId).clientId;
+        const application = await Application.findOne({ where: { clientId }, raw: true });
+        if(application && application.tokenTtl) tokenTtl = application.tokenTtl * 60; // Changing minutes to seconds
+      }
 
-  	//Permissions.findAll({where: {id:user.Roles[0].permissions}, attributes: ['id','name'], raw: true}).then(permissions => {
-      // PAYLOAD
+      // Payload
       var payload = {
-       id: user.id,
-       firstName: user.firstName,
-       lastName: user.lastName,
-       username: user.username,
-       email: user.email,
-       organization: user.organization,
-       role: user.Roles,
-       clientId: user.clientId,
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+        email: user.email,
+        organization: user.organization,
+        role: user.Roles,
+        clientId: user.clientId,
       };
 
-      // SIGNING OPTIONS
+      // Token signing options
       var signOptions = {
-       expiresIn:  '24h',
-       algorithm:  "RS256"
+        expiresIn: tokenTtl || 3600, // If expiresIn is not string it is treated as seconds
+        algorithm: 'RS256',
       };
-      console.log('payload: '+JSON.stringify(payload));
+
       var token = jwt.sign(payload, privateKey, signOptions);
 
-      Audit.create({username:req.body.username, action:'login'}).then(audit => {
-        console.log('audit created for login:'+ req.body.username + ' token: '+token);
+      //Make entry into the audit table
+      Audit.create({ username: req.body.username, action: 'login' }).then((audit) => {
         res.status(200).send({ auth: true, accessToken: token });
       });
-      //res.cookie('auth',token);
-      
-    //})
+    } catch (err) {
+      console.log(err);
+      res.status(500).send('Error -> ' + err);
+    }
+  }
+);
 
-  }).catch(err => {
-    console.log(err);
-    res.status(500).send('Error -> ' + err);
-  });
-});
 
 router.post('/verify', function(req, res, next) {
   try {
-    var verifyOptions = {
-     expiresIn:  '24h',
-     algorithms:  "RS256"
-    };
-
-    // PUBLIC key
+    // Public key
     var publicKey  = fs.readFileSync(path.resolve(__dirname, '../keys/'+process.env["PUBLIC_KEY_NAME"]), 'utf8');
 
     let token = req.headers['x-access-token'] || req.headers['authorization'];
-    console.log('token-1 '+token)
+
     if (token.startsWith('Bearer ')) {
       token = token.slice(7, token.length);
     }
-    console.log('token: '+token);
-    var verified = jwt.verify(token, publicKey, verifyOptions);
+    var verified = jwt.verify(token, publicKey);
 
     const { clientId: tokenClientId, id } = jwt.decode(token);
 
@@ -182,8 +158,10 @@ router.post('/registerUser', [
     .isEmail().withMessage('Invalid Email Address'),
   body('organization').optional({checkFalsy:true})
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),        
-  body('password').isLength({ min: 4 })  
+  body('password').matches(/(?=^.{8,}$)(?=.*\d)(?=.*[!@#$%^&*]+)(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/)
+    .withMessage('Invalid password, password must be minimum 8 characters, at least one uppercase, one lower case, one number and one of these special characters - @#$%^&* ')
 ], async (req, res) => {
+  console.log(req.param.body)
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
