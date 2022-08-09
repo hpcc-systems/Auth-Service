@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { Table, Tooltip, Divider, Popconfirm, Button, Menu, Dropdown, message } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
 import { Breadcrumb } from 'antd';
 import { getColumnSearchProps } from '../common/TablesConfig';
 import { useHistory } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { roleActions } from '../../redux/actions/Role';
-import { EditOutlined, DeleteOutlined, FileAddOutlined, DownOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, DownOutlined } from '@ant-design/icons';
 import { authHeader, handleErrors } from "../common/AuthHeader.js"
 import { Constants } from '../common/Constants';
 
 function RolesList() {
 	let history = useHistory();	
-  const roleReducer = useSelector(state => state.roleReducer);
   const dispatch = useDispatch();
   const [data, setData] = useState([]);
 
@@ -78,7 +76,7 @@ function RolesList() {
     dataIndex: 'name',
     key: 'name',
     ...getColumnSearchProps('name'),
-    render: (text, record) => <a href='#' onClick={(row) => handleEdit(record)}>{text}</a>
+    render: (text, record) => <span className="link-style"  onClick={(row) => handleEdit(record)}>{text}</span>
   },
   {
     title: 'Application Type',
@@ -106,10 +104,10 @@ function RolesList() {
 	  dataIndex: '',
 	  render: (text, record) =>
 	    <span>
-	      <a href="#" onClick={(row) => handleEdit(record)}><Tooltip placement="right" title={"View Details"}><EditOutlined /></Tooltip></a>
+	      <span className='link-style' onClick={(row) => handleEdit(record)}><Tooltip placement="right" title={"View Details"}><EditOutlined /></Tooltip></span>
         <Divider type="vertical" />
         <Popconfirm title="Are you sure you want to delete this role?" onConfirm={() => handleDelete(record)}> 
-          <a href="#"><Tooltip placement="right" title={"Delete Role"}><DeleteOutlined /></Tooltip></a>
+          <span className='link-style'><Tooltip placement="right" title={"Delete Role"}><DeleteOutlined /></Tooltip></span>
         </Popconfirm>
 
 	    </span>
@@ -122,13 +120,11 @@ function RolesList() {
 		  	<Breadcrumb className="bread-crumb">
 	        <Breadcrumb.Item>Roles</Breadcrumb.Item>
 	      </Breadcrumb>
-      	<Tooltip title="Add Role">
       		<Dropdown overlay={menu} className="add-button">
-			      <Button>
-			        Add <DownOutlined />
+			      <Button type="primary">
+			        Add a Role<DownOutlined />
 			      </Button>
 			    </Dropdown>
-    		</Tooltip>
 	  	<Table dataSource={data} columns={columns} rowKey={"id"}/>
     </React.Fragment>
 	  )  

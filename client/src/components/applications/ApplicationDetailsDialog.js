@@ -13,6 +13,7 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplication, app
   //Use effect
   useEffect(() => {
     form.setFieldsValue(selectedApplication);
+    // eslint-disable-next-line
   }, [selectedApplication]);
 
   //Close Modal -. When cancel or X clicked or when form submitted success

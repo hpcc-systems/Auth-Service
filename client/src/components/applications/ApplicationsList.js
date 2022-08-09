@@ -65,7 +65,7 @@ function ApplicationsList() {
     dataIndex: 'name',
     key: 'name',
     ...getColumnSearchProps('name'),
-    render: (text, record) => <a href='#' onClick={(row) => handleEdit(record)}>{text}</a>
+    render: (text, record) => <span className='link-style' onClick={(row) => handleEdit(record)}>{text}</span>
   },
   {
     title: 'Application Type',
@@ -99,10 +99,10 @@ function ApplicationsList() {
     dataIndex: '',
     render: (text, record) =>
       <span>
-        <a href="#" onClick={(row) => handleEdit(record)}><Tooltip placement="right" title={"View Details"}><EditOutlined /></Tooltip></a>
+        <span className='link-style' onClick={(row) => handleEdit(record)}><Tooltip placement="right" title={"View Details"}><EditOutlined /></Tooltip></span>
         <Divider type="vertical" />
         <Popconfirm title="Are you sure you want to delete this application?" onConfirm={() => handleDelete(record.id)}> 
-          <a href="#"><Tooltip placement="right" title={"Delete Application"}><DeleteOutlined /></Tooltip></a>
+          <span className='link-style'><Tooltip placement="right" title={"Delete Application"}><DeleteOutlined /></Tooltip></span>
         </Popconfirm>        
       </span>
   }
@@ -115,10 +115,10 @@ function ApplicationsList() {
 	        <Breadcrumb.Item>Applications</Breadcrumb.Item>
 	      </Breadcrumb>
       	<Tooltip title="Add Application">
-      		<Button className="add-button" icon={<FileAddOutlined />} onClick={addApplication}>Add</Button>
+      		<Button className="add-button" type="primary" icon={<FileAddOutlined />} onClick={addApplication}>Add</Button>
     		</Tooltip>
       </span>	
-      <Table dataSource={data} columns={columns} />
+      <Table dataSource={data} columns={columns} rowKey={(record) => record.id} />
 
       <ApplicationDetailsDialog isShowing={isShowing} onClose={handleClose} selectedApplication={selectedApplication} setSelectedApplication={selectedApplication} applications={data}/>
     </React.Fragment>

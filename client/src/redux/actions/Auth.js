@@ -1,6 +1,5 @@
 import {Constants} from '../../common/Constants';
 import AuthService from "../../services/AuthService";
-import { message } from 'antd';
 
 const login = (username, password) => (dispatch) => {
   return AuthService.login(username, password).then((data) => {
@@ -27,7 +26,6 @@ const logout = () => (dispatch) => {
 };
 
 const verifyToken = () => (dispatch) => {
-  console.log("verifyToken")
   AuthService.verifyToken().then((data) => {
   }).catch(error => {
   	console.log(error);  	

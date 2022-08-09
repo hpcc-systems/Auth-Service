@@ -1,4 +1,3 @@
-import { message } from 'antd';
 import { authHeader} from "../components/common/AuthHeader.js"
 import jwt_decode from "jwt-decode";
 const login = (username, password) => {
@@ -19,7 +18,7 @@ const login = (username, password) => {
     }).then(function(data) {
       if(data && data.auth) {
         let decoded = jwt_decode(data.accessToken);
-        let adminRole = decoded.role.filter(role => role.name == 'AuthService-Admin');
+        let adminRole = decoded.role.filter(role => role.name === 'AuthService-Admin');
         if(adminRole && adminRole.length > 0) {
           localStorage.setItem("user", JSON.stringify(data));
           resolve(data);
@@ -34,7 +33,6 @@ const login = (username, password) => {
 }  
 
 const verifyToken = () => {
-  console.log("verifToken")
   return new Promise((resolve, reject) => {
     fetch('/api/auth/verify', {
       method: 'post',
@@ -47,7 +45,6 @@ const verifyToken = () => {
         reject("Login failed")
       }
     }).then(function(data) {
-      console.log(data);
       resolve(data);
     });
   })

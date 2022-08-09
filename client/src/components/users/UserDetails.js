@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Button, Select, Tooltip, Row, Col, Typography, Spin, Popconfirm, Table, Divider, message, Modal } from 'antd';
-import { SearchOutlined, PlusOutlined, DeleteOutlined, MenuOutlined  } from '@ant-design/icons';
-import { Breadcrumb } from 'antd';
+import { Form, Input, Button, Select, Tooltip, Row, Col, Typography, Spin, Popconfirm, Table, Divider, message, Modal, Breadcrumb } from 'antd';
+import { PlusOutlined, DeleteOutlined, MenuOutlined  } from '@ant-design/icons';
+import { useSelector } from "react-redux";
+import { sortableContainer, sortableElement, sortableHandle } from 'react-sortable-hoc'; // May not be necessary 
+import arrayMove from 'array-move'; // <any not be necessary 
+import { useHistory } from "react-router-dom";
+import ReactJson from 'react-json-view' // May not be necessary 
+
+import { authHeader, handleErrors } from "../common/AuthHeader.js"
 import { Constants } from '../common/Constants';
 import { getColumnSearchProps } from '../common/TablesConfig';
-import { useSelector } from "react-redux";
-import { sortableContainer, sortableElement, sortableHandle } from 'react-sortable-hoc';
-import arrayMove from 'array-move';
-import { useHistory } from "react-router-dom";
-import { authHeader, handleErrors } from "../common/AuthHeader.js"
-import ReactJson from 'react-json-view'
 
 const Option = Select.Option;
-const { TextArea } = Input;
-const { Title, Paragraph } = Typography;
+const { Title } = Typography;
+
 const layout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
@@ -42,6 +42,7 @@ function UserDetails() {
 	const SortableContainer = sortableContainer(props => <tbody {...props} />);
 
 	let user = userReducer.user;
+	 // eslint-disable-next-line
 	let lastFetchId;	
 	
 	useEffect(() => {		
@@ -55,10 +56,10 @@ function UserDetails() {
 			history.push('/users');
 		}
 
-		if(user && user.userId != '') {
+		if(user && user.userId !== '') {
 			getUserDetails(user.userId)				
 		} 
-
+  // eslint-disable-next-line
   }, [user])  
 
 	const getUserDetails = (userId) => {
@@ -88,7 +89,7 @@ function UserDetails() {
 						appId: role.User_Roles.applicationId
 					};
 
-					let application = data.Applications.filter(application => application.id == role.User_Roles.applicationId);
+					let application = data.Applications.filter(application => application.id === role.User_Roles.applicationId);
 					if(application) {
 						appRoleObj.appName = application[0].name;
 					}
@@ -117,7 +118,7 @@ function UserDetails() {
     	appRoles: appRoles
     }
     fetch('/api/users/user', {
-      method: postObj.id == '' ? 'post' : 'post',
+      method: postObj.id === '' ? 'post' : 'post',
       headers: authHeader(),
       body: JSON.stringify(postObj)
     })
@@ -178,33 +179,31 @@ function UserDetails() {
 
   const fetchApplications = value => {
     lastFetchId += 1;
-    const fetchId = lastFetchId;
-    setApplicationsData({ data: [], fetching: true });
-    
     const filteredData = applications.map((application) => {
     	if(application.name.includes(value)) {
     		console.log("matched")
     		return {"text": application.name, "value": application.key}
-    	}
+    	}else{return null}
     })
     setApplicationsData({ data: filteredData, fetching: false });
   };
 
   const fetchRoles = value => {
     lastFetchId += 1;
-    const fetchId = lastFetchId;
     setRolesData({ data: [], fetching: true });
     
     const filteredData = roles.map((role) => {
     	if(role.name.includes(value)) {
     		return {"text": role.name, "value": role.key}
-    	}
+    	}else{
+			return null
+		}
     })
     setRolesData({ data: filteredData, fetching: false });
   };
 
   const handleRoleDelete = (priority) => {
-  	let afterDelete = appRoles.filter(appRole => appRole.priority != priority)
+  	let afterDelete = appRoles.filter(appRole => appRole.priority !== priority)
   	setAppRoles(afterDelete)
   }
 
@@ -217,7 +216,7 @@ function UserDetails() {
   		roleName: rolesData.value.label  		
   	};
   	let newData = [...appRoles, appRolesNew];
-  	let duplicateAppRole = appRoles.filter(appRole => appRole.appId == applicationsData.value.key && appRole.roleId == rolesData.value.key);
+  	let duplicateAppRole = appRoles.filter(appRole => appRole.appId === applicationsData.value.key && appRole.roleId === rolesData.value.key);
   	if(duplicateAppRole && duplicateAppRole.length > 0) {
   		message.error("Application and Role already added for this user. Please select a different Application/Role");
   	} else {
@@ -275,8 +274,8 @@ function UserDetails() {
   	let appId='', foundDifferentApp = false, roleIds=[];
   	selectedRows.forEach((selectedRow) => {
   		roleIds.push(selectedRow.roleId);
-  		if(!appId == '') {
-  			if(appId != selectedRow.appId)	{
+  		if(!appId === '') {
+  			if(appId !== selectedRow.appId)	{
 					foundDifferentApp = true;
 					return;
   			}  			
@@ -328,7 +327,7 @@ function UserDetails() {
     key: 'appName',
     className: 'drag-visible',
     ...getColumnSearchProps('applicationType'),
-    render: (text, record) => <a href='#' >{text}</a>
+    render: (text, record) => <a href='/applications' >{text}</a>
   },
   {
     title: 'Role',
@@ -348,7 +347,7 @@ function UserDetails() {
     render: (text, record) =>
       <span>
         <Popconfirm title="Are you sure you want to delete this application/role?" onConfirm={() => handleRoleDelete(record.priority)}> 
-          <a href="#"><Tooltip placement="right" title={"Delete"}><DeleteOutlined /></Tooltip></a>
+          <span className='link-style'><Tooltip placement="right" title={"Delete"}><DeleteOutlined /></Tooltip></span>
         </Popconfirm>        
       </span>
   }];  
@@ -405,7 +404,7 @@ function UserDetails() {
 		        </Form.Item>
 		      </Col>
 	      </Row>  
-	      {!userDetails || userDetails.length == 0 ? 
+	      {!userDetails || userDetails.length === 0 ? 
 	        <Row gutter={16}>
 	        	<Col span={8}>
 			        <Form.Item
@@ -540,6 +539,7 @@ function UserDetails() {
           title="Permissions Preview"
           visible={previewDialogVisible}
           onCancel={handlePreviewClose}
+		  forceRender // Before Modal opens, children elements do not exist in the view.forceRender pre-renders its children. if not done browser console error -  'Instance created by `useForm` is not connected to any Form element'
           footer={[
             <Button key="back" onClick={handlePreviewClose}>
               Close
@@ -550,7 +550,7 @@ function UserDetails() {
       </Modal>  
 
 	      <Row className="footer-buttons">
-	      	<Col style={{"padding-right": "10px"}}>  
+	      	<Col style={{"paddingRight": "10px"}}>  
 		        <Button htmlType="button" onClick={onCancel}>
 		          Cancel
 		        </Button>
