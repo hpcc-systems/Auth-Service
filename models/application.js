@@ -12,6 +12,10 @@ module.exports = (sequelize, DataTypes) => {
     description: DataTypes.STRING,
     email: DataTypes.STRING,
     owner: DataTypes.STRING,
+    tokenTtl: {
+      type: DataTypes.SMALLINT,
+      allowNull: true
+    },
     applicationType: DataTypes.STRING,
     clientId: DataTypes.STRING
   }, {paranoid: true, freezeTableName: true});

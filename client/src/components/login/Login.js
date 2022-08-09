@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
-import { Form, Input, Button, Checkbox, message } from 'antd';
+import React from 'react';
+import { Form, Input, Button, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useHistory } from "react-router-dom";
 import  {authActions}  from '../../redux/actions/Auth';
 
@@ -18,7 +18,7 @@ function Login() {
     })
     .catch((error) => {
       console.log(error);
-      if(error == 'Insufficitent Privileges') {
+      if(error === 'Insufficitent Privileges') {
         localStorage.removeItem("user");
         message.error("Login failed - Insufficitent Privileges")
       } else {

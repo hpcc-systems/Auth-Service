@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { Form, Input, Button, Modal, message, Alert } from 'antd';
-import { Constants } from '../common/Constants';
+import React, { useState } from 'react'
+import { Form, Input, Modal, message } from 'antd';
 import { authHeader, handleErrors } from "../common/AuthHeader.js"
 
 const layout = {
@@ -9,7 +8,7 @@ const layout = {
 };
 
 function ChangePasswordDialog({ isShowing, onClose, username }) {
-	const [changePasswordDetails, setChangePasswordDetails] = useState({
+	const [setChangePasswordDetails] = useState({
     newpassword: ''
   });	
 	const [form] = Form.useForm();	  
@@ -45,15 +44,13 @@ function ChangePasswordDialog({ isShowing, onClose, username }) {
     });    
   }
 
-  const onChange = (e) => {
-    setChangePasswordDetails({...changePasswordDetails, [e.target.name]: e.target.value})
-  }
   
   return (
   	<React.Fragment>
 	  	<Modal
           title="Reset Password"
           visible={isShowing}
+          forceRender // Before Modal opens, children elements do not exist in the view.forceRender pre-renders its children. if not done browser console error -  'Instance created by `useForm` is not connected to any Form element'
           onCancel={onClose}
           width={800}
           onOk={() => {
