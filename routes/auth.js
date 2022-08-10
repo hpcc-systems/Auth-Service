@@ -147,80 +147,111 @@ router.post('/verify', function(req, res, next) {
 });
 
 // REGISTER USER
-router.post('/registerUser', [
-  body('firstName')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid First Name'),
-  body('lastName')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Last Name'),
-  body('username')
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
-  body('email')
-    .isEmail().withMessage('Invalid Email Address'),
-  body('organization').optional({checkFalsy:true})
-    .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid Organization Name'),        
-  body('password').matches(/(?=^.{8,}$)(?=.*\d)(?=.*[!@#$%^&*]+)(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/)
-    .withMessage('Invalid password, password must be minimum 8 characters, at least one uppercase, one lower case, one number and one of these special characters - @#$%^&* ')
-], async (req, res) => {
-  console.log(req.param.body)
-  const errors = validationResult(req).formatWith(errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ success: false, errors: errors.array() });
-  }
-  try {
-    // Attempting to add user. if user with username or email already exists, it returns the user object
-    // If it no user with matching username or email found, it creates one and returns isCreated = true
-    const [user, isCreated] = await User.findOrCreate({
-      where: {[Op.or]: [{username: req.body.username}, {email : req.body.email}]},
-      include: [{model:Role}],
-      defaults: {
-        "firstName": req.body.firstName,
-        "lastName": req.body.lastName,
-        "username": req.body.username,
-        "password": bcrypt.hashSync(req.body.password, 10),
-        "email": req.body.email,
-        "organization": req.body.organization
-      }
-  })
-
-   // The register user payload come with user role. find the user role so the id can be used to create userRole
-    const role = await Role.findOne({where: {"name":req.body.role}});
-
-    // The register user payload comes with client ID. Grab that app id. It is needed for userRole
-    const application = await Application.findOne({where : {"clientId" : req.body.clientId}});
-
-    // User role options 
-    const userRoleOptions = {
-      userId: user.id,
-      roleId : role.id,
-      applicationId: application.id,
-      priority : 1
+router.post(
+  "/registerUser",
+  [
+    body("firstName")
+      .matches(/^[a-zA-Z]{1}[a-zA-Z ]*$/)
+      .withMessage("Invalid first name - First name must start with a letter and can contain only alphabets and spaces"),
+    body("lastName")
+      .matches(/^[a-zA-Z]{1}[a-zA-Z ]*$/)
+      .withMessage("Invalid last name - Last name must start with a letter and can contain only alphabets and spaces"),
+    body("username")
+      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9]*$/)
+      .withMessage( "Invalid Username - Username can only contain letters and numbers"),
+    body("email").isEmail().withMessage("Invalid Email Address"),
+    body("role")
+      .optional({ checkFalsy: true })
+      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/)
+      .withMessage("Invalid Role -  Role must start with a letter and can contain only alphabets, numbers, spaces, _ and -" ),
+    body("clientId")
+      .optional({ checkFalsy: true })
+      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/)
+      .withMessage("Invalid ClientID -  ClientID must start with a letter and can contain only alphabets, numbers, _ and -"),
+    body("organization")
+      .optional({ checkFalsy: true })
+      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/)
+      .withMessage( "Invalid Organization Name - Organization name can contain only letters, numbers, _ and -"),
+    body("password")
+      .matches(/(?=^.{8,}$)(?=.*\d)(?=.*[!@#$%^&*]+)(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/)
+      .withMessage( "Invalid password-  password must be minimum 8 characters, at least one uppercase, one lower case, one number and one of these special characters - @#$%^&* "),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
     }
-
-    if(!isCreated){
-      /* User already exists -> check if user is trying to register with new role. If user is trying to register with a new role, create user role.  if user is trying to 
-      register with a duplicate role return userRoleCreated = false */
-      let [userRole, userRoleCreated] = await UserRoles.findOrCreate({
-        where: {userId: user.id, roleId: role.id, applicationId : application.id},
-        defaults : userRoleOptions
+    try {
+      // Attempting to add user. if user with username or email already exists, it returns the user object
+      // If it no user with matching username or email found, it creates one and returns isCreated = true
+      const [user, isCreated] = await User.findOrCreate({
+        where: {
+          [Op.or]: [{ username: req.body.username }, { email: req.body.email }],
+        },
+        include: [{ model: Role }],
+        defaults: {
+          firstName: req.body.firstName,
+          lastName: req.body.lastName,
+          username: req.body.username,
+          password: bcrypt.hashSync(req.body.password, 10),
+          email: req.body.email,
+          organization: req.body.organization,
+        },
       });
 
-      if(userRoleCreated){
-        // If the user role was created, return success
-        return res.status(200).json({success: true, message: 'Registration successful'});
-      }else{
-        // If the user is trying to register for the role they already have, return failure
-        return res.status(409).json({success: false, message : `Account with username/email you entered already exists`});
-      }
-    }
+      // The register user payload come with user role. find the user role so the id can be used to create userRole
+      const role = await Role.findOne({ where: { name: req.body.role } });
 
-    //If the payload came with unique username or E-mail - user is already created. Next make entry to UserRoles table and return success
-    await UserRoles.create(userRoleOptions);
-    res.status(200).json({success: true, message: 'Registration successful'});
-  } catch (err) {
-    console.log('[routes/auth.js/registerUser]', err);
-    return res.status(500).json({success: false, message: err.message})
+      // The register user payload comes with client ID. Grab that app id. It is needed for userRole
+      const application = await Application.findOne({
+        where: { clientId: req.body.clientId },
+      });
+
+      // User role options
+      const userRoleOptions = {
+        userId: user.id,
+        roleId: role.id,
+        applicationId: application.id,
+        priority: 1,
+      };
+
+      if (!isCreated) {
+        /* User already exists -> check if user is trying to register with new role. If user is trying to register with a new role, create user role.  if user is trying to 
+      register with a duplicate role return userRoleCreated = false */
+        let [userRole, userRoleCreated] = await UserRoles.findOrCreate({
+          where: {
+            userId: user.id,
+            roleId: role.id,
+            applicationId: application.id,
+          },
+          defaults: userRoleOptions,
+        });
+
+        if (userRoleCreated) {
+          // If the user role was created, return success
+          return res
+            .status(200)
+            .json({ success: true, message: "Registration successful" });
+        } else {
+          // If the user is trying to register for the role they already have, return failure
+          return res.status(409).json({
+            success: false,
+            message: `Account with username/email you entered already exists`,
+          });
+        }
+      }
+
+      //If the payload came with unique username or E-mail - user is already created. Next make entry to UserRoles table and return success
+      await UserRoles.create(userRoleOptions);
+      res
+        .status(200)
+        .json({ success: true, message: "Registration successful" });
+    } catch (err) {
+      console.log("[routes/auth.js/registerUser]", err);
+      return res.status(500).json({ success: false, message: err.message });
+    }
   }
-});
+);
 
 
 
