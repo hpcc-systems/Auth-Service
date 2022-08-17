@@ -1,6 +1,14 @@
 'use strict';
-var bcrypt = require('bcryptjs');
+const crypto = require("crypto");
 require("dotenv").config();
+
+ let hashPassword = (password) => {
+   let salt = password.substring(0, 2);
+   return crypto
+     .createHash("sha256")
+     .update(salt + password)
+     .digest("base64");
+ };
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
@@ -14,7 +22,7 @@ module.exports = {
           lastName : 'admin',
           username : 'admin',
           email : 'admin@authservice.com',
-          password: bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10),
+          password: hashPassword(process.env.ADMIN_PASSWORD),
           createdAt : new Date(),
           updatedAt : new Date()
         }], {});
