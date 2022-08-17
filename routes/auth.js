@@ -2,7 +2,6 @@ require('dotenv').config();
 var express = require('express');
 var router = express.Router();
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const crypto = require("crypto");
 var fs = require('fs');
 const path = require("path");
@@ -23,6 +22,7 @@ const privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/' + process
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
+//Hash Password function -> 
  let hashPassword = (password) => {
   let salt = password.substring(0, 2);
   return crypto.createHash("sha256").update(salt+password).digest('base64');
@@ -58,13 +58,18 @@ router.post(
       const user = await User.findOne({
         where: {
           username: username,
-          password: hashPassword(password),
         },
         include: [{ model: models.Role }, { model: models.Application }],
       });
 
       if (!user) {
         throw new Error('User Not Found.');
+      }
+
+      //Check if password match
+      const userProvidedPasswordHash = hashPassword(password)
+      if(userProvidedPasswordHash !== user.password){
+        throw new Error("Invalid Password.");
       }
 
       let tokenTtl; // Get from application
@@ -193,7 +198,7 @@ router.post(
           firstName: req.body.firstName,
           lastName: req.body.lastName,
           username: req.body.username,
-          password: bcrypt.hashSync(req.body.password, 10),
+          password: hashPassword(req.body.password),
           email: req.body.email,
           organization: req.body.organization,
         },
@@ -345,7 +350,7 @@ router.post('/resetPassword',
           if(user == null) {
             res.status(500).json({"success":"false", "message": "Invalid Password Reset Request"});
           }
-          let hash = bcrypt.hashSync(req.body.password, 10);
+          let hash = hashPassword(req.body.password);
           User.update(
             {password: hash},
             {where: {id: resetRecord.userid}
