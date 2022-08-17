@@ -24,51 +24,40 @@ const signOptions = {
 };
 
 let payload = {
-  //iss:'hpcc_systems_issuer',  
   aud:'hpcc_systems_platform'  
 }
 
- let hashPassword = (password) => {
-  let salt = password.substring(0, 2);
-  return crypto.createHash("sha256").update(salt+password).digest('base64');
-}
 
-let validateUser = (username, password, nonce) => {  
+let validateUser = (username, password, nonce) => {
   return new Promise((resolve, reject) => {
-    if(!username) {
-      reject("Username required!")
+    if (!username) {
+      reject("Username required!");
     }
-    if(!password) {
-      reject("Password required!")
+    if (!password) {
+      reject("Password required!");
     }
     User.findOne({
       where: {
-        username: username
-      }
-    }).then(user => {
+        username: username,
+      },
+    }).then((user) => {
       if (!user) {
-        //throw new Error('User Not Found.');
-        reject("Invalid User!")
+        reject("Invalid User!");
       }
-      // let passwordBase64DecodedBuff = Buffer.from(user.password, 'base64');  
-      // let nonceBuff = Buffer.from(nonce);
-      // let passwordNonce = Buffer.concat([passwordBase64DecodedBuff, nonceBuff]);
-      // let concatenatedHash = crypto.createHash("sha256").update(passwordNonce).digest('base64')
-      //var passwordIsValid = bcrypt.compareSync(password, user.password);
-
-      var passwordIsValid = (user.password == hashPassword(password));
+      let passwordBase64DecodedBuff = Buffer.from(user.password, "base64");
+      let nonceBuff = Buffer.from(nonce);
+      let passwordNonce = Buffer.concat([passwordBase64DecodedBuff, nonceBuff]);
+      let concatenatedHash = crypto.createHash("sha256").update(passwordNonce).digest("base64");
+      var passwordIsValid = password == concatenatedHash;
       if (!passwordIsValid) {
-        //return res.status(401).send({ auth: false, accessToken: null, reason: "Invalid Password!" });
-        //throw new Error("Invalid Password!")
-        let isBcryptPasswordValid = bcrypt.compareSync(password, user.password);
-        if(!isBcryptPasswordValid) {
-          reject("Invalid Password!")  
-        }        
+          reject("Invalid Password!");
       }
-      resolve(user);    
-    })   
-  })
-}
+      resolve(user);
+    });
+  });
+};
+
+
 
 let populatePermissions = (roles) => {
   let permissions_roles = {};
