@@ -40,7 +40,40 @@ const sendPasswordResetLink = async (receiver_email, fristName, lastName, resetU
   }
 };
 
+
+const notify = async ({emailAddress, emailTitle, emailBody, sender}) => {
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_SMTP_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: false,
+    auth: {},
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
+
+  const options = {
+    from: sender || process.env.EMAIL_SENDER,
+    to: emailAddress,
+    subject: emailTitle,
+    text: emailBody,
+    html: ` <p>${emailBody}</p>`,
+  };
+
+  try {
+    let info = await transporter.sendMail(options);
+    console.log('------------------------------------------');
+    console.log(info)
+    console.log('------------------------------------------');
+    return info;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
 module.exports = {
-  sendPasswordResetLink
+  sendPasswordResetLink,
+  notify
 }
 

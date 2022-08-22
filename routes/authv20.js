@@ -43,16 +43,17 @@ let validateUser = (username, password, nonce) => {
     }).then((user) => {
       if (!user) {
         reject("Invalid User!");
-      }
-      let passwordBase64DecodedBuff = Buffer.from(user.password, "base64");
-      let nonceBuff = Buffer.from(nonce);
-      let passwordNonce = Buffer.concat([passwordBase64DecodedBuff, nonceBuff]);
-      let concatenatedHash = crypto.createHash("sha256").update(passwordNonce).digest("base64");
-      var passwordIsValid = password == concatenatedHash;
-      if (!passwordIsValid) {
+      }else{
+        let passwordBase64DecodedBuff = Buffer.from(user.password, "base64");
+        let nonceBuff = Buffer.from(nonce);
+        let passwordNonce = Buffer.concat([passwordBase64DecodedBuff, nonceBuff]);
+        let concatenatedHash = crypto.createHash("sha256").update(passwordNonce).digest("base64");
+        var passwordIsValid = password == concatenatedHash;
+        if (!passwordIsValid) {
           reject("Invalid Password!");
-      }
-      resolve(user);
+        }
+        resolve(user);
+      }  
     });
   });
 };
@@ -120,6 +121,7 @@ router.post('/login', [
   body('client_id').not().isEmpty()
 ], async (req, res) => {  
   const errors = validationResult(req).formatWith(errorFormatter);
+  console.log(errors)
   if (!errors.isEmpty()) {
     return res.status(422).json({ error: "Invalid input" });
   }

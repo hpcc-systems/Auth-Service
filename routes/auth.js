@@ -1,25 +1,30 @@
 require('dotenv').config();
 var express = require('express');
-var router = express.Router();
+const router = express.Router();
 const jwt = require('jsonwebtoken');
 const crypto = require("crypto");
-var fs = require('fs');
+const fs = require('fs');
 const path = require("path");
-let models = require('../models');
-let User = models.User;
-let Role = models.Role;
-let UserRoles = models.User_Roles;
-let Permissions = models.Permission;
-let Audit = models.Audit;
-let Application = models.Application;
-let PasswordReset = models.PasswordReset;
+const models = require('../models');
+const User = models.User;
+const Role = models.Role;
+const UserRoles = models.User_Roles;
+const Audit = models.Audit;
+const Application = models.Application;
+const PasswordReset = models.PasswordReset;
+const Email_verification_code = models.Email_verification_code;
 const NotificationModule = require('../utils/notifications');
-const { body, query, check, validationResult } = require('express-validator');
+const { body, query, param, validationResult } = require('express-validator');
+const {notify} = require("../utils/notifications")
+
+
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {    
   return `${location}[${param}]: ${msg}`;
 };
 const privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/' + process.env["PRIVATE_KEY_NAME"]), 'utf8');
 let Sequelize = require('sequelize');
+const { v4: uuidv4 } = require("uuid");
+
 const Op = Sequelize.Op;
 
 //Hash Password function -> 
@@ -73,6 +78,7 @@ router.post(
       }
 
       let tokenTtl; // Get from application
+      let application;
 
       if (clientId) {
         const hasPermission = user.Applications.some(({ clientId: client_id }) => client_id === clientId);
@@ -80,10 +86,15 @@ router.post(
           throw new Error('Unauthorized');
         }
         user.clientId = user.Applications.find(({ clientId: client_id }) => client_id === clientId).clientId;
-        const application = await Application.findOne({ where: { clientId }, raw: true });
+        application = await Application.findOne({ where: { clientId }, raw: true });
         if(application && application.tokenTtl) tokenTtl = application.tokenTtl * 60; // Changing minutes to seconds
       }
 
+      if(application){
+       if (application.registrationConfirmationRequired && !user.accountVerified){
+              throw new Error("Account not verified");
+       }
+      }
       // Payload
       var payload = {
         id: user.id,
@@ -187,8 +198,12 @@ router.post(
       return res.status(422).json({ success: false, errors: errors.array() });
     }
     try {
-      // Attempting to add user. if user with username or email already exists, it returns the user object
-      // If it no user with matching username or email found, it creates one and returns isCreated = true
+      // The register user payload comes with client ID. Grab that app id. It is needed for userRole
+      const application = await Application.findOne({
+        where: { clientId: req.body.clientId },
+      });
+
+      // Attempting to add user. if user with username or email already exists, it returns the user object. If it no user with matching username or email found, it creates one and returns isCreated = true
       const [user, isCreated] = await User.findOrCreate({
         where: {
           [Op.or]: [{ username: req.body.username }, { email: req.body.email }],
@@ -201,16 +216,13 @@ router.post(
           password: hashPassword(req.body.password),
           email: req.body.email,
           organization: req.body.organization,
+          accountVerified: application.registrationConfirmationRequired ? false : true,
+          registrationConfirmationCode: application.registrationConfirmationRequired ? uuidv4() : null,
         },
       });
 
       // The register user payload come with user role. find the user role so the id can be used to create userRole
       const role = await Role.findOne({ where: { name: req.body.role } });
-
-      // The register user payload comes with client ID. Grab that app id. It is needed for userRole
-      const application = await Application.findOne({
-        where: { clientId: req.body.clientId },
-      });
 
       // User role options
       const userRoleOptions = {
@@ -234,9 +246,7 @@ router.post(
 
         if (userRoleCreated) {
           // If the user role was created, return success
-          return res
-            .status(200)
-            .json({ success: true, message: "Registration successful" });
+          return res.status(200).json({ success: true, message: "Registration successful" });
         } else {
           // If the user is trying to register for the role they already have, return failure
           return res.status(409).json({
@@ -248,9 +258,23 @@ router.post(
 
       //If the payload came with unique username or E-mail - user is already created. Next make entry to UserRoles table and return success
       await UserRoles.create(userRoleOptions);
-      res
-        .status(200)
-        .json({ success: true, message: "Registration successful" });
+      res.status(200).json({ success: true, message: "Registration successful" });
+
+      try{
+        if (application.registrationConfirmationRequired) {
+          // The web URL must come from client
+          const url = `https://www.google.com/${user.registrationConfirmationCode}`;
+          const sender = `donotreply@${application.applicationType.toLowerCase()}.com`;
+          const emailTitle = `${application.applicationType} - Verify your email address`;
+          const emailBody = `<p>Hello ${user.firstName} ,</p><p> click <a href=${url} /> here </a> to verify your email </p>`;
+
+          await notify({ emailAddress: user.email, emailBody, sender, emailTitle });
+        }
+      }catch(err){
+        console.log(err)
+      }
+      
+      
     } catch (err) {
       console.log("[routes/auth.js/registerUser]", err);
       return res.status(500).json({ success: false, message: err.message });
@@ -366,6 +390,39 @@ router.post('/resetPassword',
     console.log('err', err);
   }
 }); 
+
+//Verify Email 
+router.post("/verifyEmail", [
+  query('registrationConfirmationCode').isUUID(),
+], async (req, res) => {
+   const errors = validationResult(req).formatWith(errorFormatter);
+   const {registrationConfirmationCode}  = req.query;
+    
+    if (!errors.isEmpty()) {
+      console.log(errors)
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
+
+    try{
+       const updated = await User.update({ registrationConfirmationCode : null, accountVerified: true},{where: {registrationConfirmationCode}});
+      if(updated[0] > 0){
+        await Email_verification_code.create({ verificationCode: registrationConfirmationCode });
+        res.status(200).json({success: true,  message: 'Email verified successfully'})
+      }else{
+        const verified = await Email_verification_code.findOne({where: { verificationCode: registrationConfirmationCode}})
+        if(verified){
+          res.status(409).json({success: false, message: 'Email already verified' })
+        }else{
+           res.status(400).json({success: false, message: 'Invalid verification link' })
+        }
+      }
+    }catch(err){
+      console.log('------------------------------------------');
+      console.dir({err}, {depth: null})
+      console.log('------------------------------------------');
+      res.status(500).json({success: false, message : 'Failed to process request'})
+    }
+});
 
 
 module.exports = router;

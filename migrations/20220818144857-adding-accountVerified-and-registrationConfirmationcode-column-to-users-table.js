@@ -3,22 +3,22 @@ module.exports = {
     const transaction = await queryInterface.sequelize.transaction();
     try {
       await queryInterface.addColumn(
-        'application',
-        'tokenTtl',
+        "users",
+        "accountVerified",
         {
-          type: Sequelize.DataTypes.SMALLINT,
-          allowNull: true,
-          after: "owner",
+          type: Sequelize.DataTypes.BOOLEAN,
+          allowNull: false,
+          after: "password",
         },
         { transaction }
       );
       await queryInterface.addColumn(
-        "application",
-        "registrationConfirmationRequired",
+        "users",
+        "registrationConfirmationCode",
         {
-          type: Sequelize.DataTypes.BOOLEAN,
-          default: false,
-          after: "owner",
+          type: Sequelize.DataTypes.UUID,
+          after: "accountVerified",
+          allowNull: true,
         },
         { transaction }
       );
@@ -33,8 +33,8 @@ module.exports = {
   async down(queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
     try {
-      await queryInterface.removeColumn('application', 'tokenTtl', { transaction });
-      await queryInterface.removeColumn("application", "registrationConfirmationRequired", { transaction });
+      await queryInterface.removeColumn("users", "accountVerified", { transaction });
+      await queryInterface.removeColumn("users", "registrationConfirmationCode", { transaction });
       await transaction.commit();
     } catch (err) {
       await transaction.rollback();

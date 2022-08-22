@@ -12,7 +12,8 @@ module.exports = {
     queryInterface.addColumn(
       'Application',
       'clientId', Sequelize.STRING, {
-         after: 'application_id'
+         after: 'application_id',
+         required: true
       }
      )
     ]);

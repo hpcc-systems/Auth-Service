@@ -22,6 +22,7 @@ module.exports = {
           lastName : 'admin',
           username : 'admin',
           email : 'admin@authservice.com',
+          accountVerified: true,
           password: hashPassword(process.env.ADMIN_PASSWORD),
           createdAt : new Date(),
           updatedAt : new Date()

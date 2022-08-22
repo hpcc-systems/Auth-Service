@@ -1,25 +1,25 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-const withAuth = require('./middleware');
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
 
-var loginRouter = require('./routes/login');
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var authRouter = require('./routes/auth');
-var uiRouter = require('./routes/ui');
-var appRouter = require('./routes/application');
-var authV20Router = require('./routes/authv20');
-var roleRouter = require('./routes/roles');
+const withAuth = require('./middleware');
+const loginRouter = require('./routes/login');
+const usersRouter = require('./routes/users');
+const authRouter = require('./routes/auth');
+const uiRouter = require('./routes/ui');
+const appRouter = require('./routes/application');
+const authV20Router = require('./routes/authv20');
+const roleRouter = require('./routes/roles');
+const notificationRouter = require('./routes/notification')
+const { userAccountCleanUp } = require("./jobSchedular");
 
 var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-//app.set('view engine', 'jade');
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -32,11 +32,9 @@ app.use('/api/users', withAuth, usersRouter);
 app.use('/api/auth/v20', authV20Router);
 app.use('/api/auth', authRouter);
 app.use('/admin', withAuth, uiRouter);
-//app.use('/', withAuth, indexRouter);
 app.use('/api/application', withAuth, appRouter); 
-
+app.use('/api/notification', notificationRouter)
 app.use('/api/roles', withAuth, roleRouter)
-
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -54,6 +52,9 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-app.listen(process.env["PORT"], '0.0.0.0', () => console.log('Server listening on port '+process.env["PORT"]));
+app.listen(process.env["PORT"], '0.0.0.0', () => {
+userAccountCleanUp();
+console.log('Server listening on port '+process.env["PORT"])
+});
 
 module.exports = app;
