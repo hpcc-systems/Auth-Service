@@ -92,7 +92,7 @@ router.post(
 
       if(application){
        if (application.registrationConfirmationRequired && !user.accountVerified){
-              throw new Error("Account not verified");
+            return res.status(200).send({ accountVerified : false});
        }
       }
       // Payload
@@ -117,11 +117,11 @@ router.post(
 
       //Make entry into the audit table
       Audit.create({ username: req.body.username, action: 'login' }).then((audit) => {
-        res.status(200).send({ auth: true, accessToken: token });
+        res.status(200).send({ auth: true, accessToken: token, accountVerified: true });
       });
     } catch (err) {
       console.log(err);
-      res.status(500).send('Error -> ' + err);
+      res.status(500).send({success: false,  message : err.message});
     }
   }
 );
@@ -258,23 +258,23 @@ router.post(
 
       //If the payload came with unique username or E-mail - user is already created. Next make entry to UserRoles table and return success
       await UserRoles.create(userRoleOptions);
-      res.status(200).json({ success: true, message: "Registration successful" });
+      
+        if (application.registrationConfirmationRequired) { // If unable to send email, roll back -> remove user
+            // The web URL must come from client
+              const url = `${req.body.clientWebUrl}verifyEmail?code=${user.registrationConfirmationCode}`;
+              const sender = `donotreply@${application.applicationType.toLowerCase()}.com`;
+              const emailTitle = `${application.applicationType} - Verify your email address`;
+              const emailBody = `<p>Hello ${user.firstName} ,</p><p> click <a href=${url} /> here </a> to verify your email </p>`;
 
-      try{
-        if (application.registrationConfirmationRequired) {
-          // The web URL must come from client
-          const url = `https://www.google.com/${user.registrationConfirmationCode}`;
-          const sender = `donotreply@${application.applicationType.toLowerCase()}.com`;
-          const emailTitle = `${application.applicationType} - Verify your email address`;
-          const emailBody = `<p>Hello ${user.firstName} ,</p><p> click <a href=${url} /> here </a> to verify your email </p>`;
-
-          await notify({ emailAddress: user.email, emailBody, sender, emailTitle });
+              const notification = await notify({ emailAddress: user.email, emailBody, sender, emailTitle });
+            if(notification.accepted){
+              return res.status(200).json({ success: true, message: "Registration successful", emailVerificationRequired: true });
+            }
+              await User.destroy({where : {id : user.id}})
+              return res.status(500).json({ success: false, message: "err.message" });
+          }else{
+           return res.status(200).json({ success: true, message: "Registration successful", emailVerificationRequired: false });
         }
-      }catch(err){
-        console.log(err)
-      }
-      
-      
     } catch (err) {
       console.log("[routes/auth.js/registerUser]", err);
       return res.status(500).json({ success: false, message: err.message });
