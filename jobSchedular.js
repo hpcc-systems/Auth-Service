@@ -15,7 +15,7 @@ const userAccountCleanUp = () =>
         const createdAt = user.createdAt;
         const createdAtTimeStamp = Date.parse(createdAt);
         const accountAge = Math.round((currentTimeStamp - createdAtTimeStamp) / (1000 * 60 * 60)); // hrs
-        if (accountAge < 12 && !user.accountVerified) {
+        if (accountAge > 12 && !user.accountVerified) {
           unverifiedUserIds.push(user.id);
         }
       });

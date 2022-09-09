@@ -15,15 +15,14 @@ const PasswordReset = models.PasswordReset;
 const Email_verification_code = models.Email_verification_code;
 const NotificationModule = require('../utils/notifications');
 const { body, query, param, validationResult } = require('express-validator');
-const {notify} = require("../utils/notifications")
-
+const {notify, emailVerificationTemplate} = require("../utils/notifications")
+const { v4: uuidv4 } = require("uuid");
 
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {    
   return `${location}[${param}]: ${msg}`;
 };
 const privateKey  = fs.readFileSync(path.resolve(__dirname, '../keys/' + process.env["PRIVATE_KEY_NAME"]), 'utf8');
 let Sequelize = require('sequelize');
-const { v4: uuidv4 } = require("uuid");
 
 const Op = Sequelize.Op;
 
@@ -260,21 +259,21 @@ router.post(
       await UserRoles.create(userRoleOptions);
       
         if (application.registrationConfirmationRequired) { // If unable to send email, roll back -> remove user
-            // The web URL must come from client
-              const url = `${req.body.clientWebUrl}verifyEmail?code=${user.registrationConfirmationCode}`;
+              // The web URL must come from client
+              const url = `${req.body.clientWebUrl}verifyEmail/${user.registrationConfirmationCode}`;
               const sender = `donotreply@${application.applicationType.toLowerCase()}.com`;
               const emailTitle = `${application.applicationType} - Verify your email address`;
-              const emailBody = `<p>Hello ${user.firstName} ,</p><p> click <a href=${url} /> here </a> to verify your email </p>`;
-
+              const emailBody = emailVerificationTemplate({ appName: application.applicationType, url });
               const notification = await notify({ emailAddress: user.email, emailBody, sender, emailTitle });
-            if(notification.accepted){
-              return res.status(200).json({ success: true, message: "Registration successful", emailVerificationRequired: true });
-            }
-              await User.destroy({where : {id : user.id}})
-              return res.status(500).json({ success: false, message: "err.message" });
-          }else{
-           return res.status(200).json({ success: true, message: "Registration successful", emailVerificationRequired: false });
-        }
+
+              if(notification.accepted){
+                return res.status(200).json({ success: true, message: "Registration successful", emailVerificationRequired: true });
+              }
+                await User.destroy({where : {id : user.id}})
+                return res.status(500).json({ success: false, message: "Failed to send account verification link" });
+              }else{
+                return res.status(200).json({ success: true, message: "Registration successful", emailVerificationRequired: false });
+              }
     } catch (err) {
       console.log("[routes/auth.js/registerUser]", err);
       return res.status(500).json({ success: false, message: err.message });
@@ -393,24 +392,28 @@ router.post('/resetPassword',
 
 //Verify Email 
 router.post("/verifyEmail", [
-  query('registrationConfirmationCode').isUUID(),
+  body('code').isUUID(),
 ], async (req, res) => {
    const errors = validationResult(req).formatWith(errorFormatter);
-   const {registrationConfirmationCode}  = req.query;
+   const {code}  = req.body;
     
     if (!errors.isEmpty()) {
       console.log(errors)
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return res.status(422).json({ success: false, message: 'Invalid verification link'});
     }
 
     try{
-       const updated = await User.update({ registrationConfirmationCode : null, accountVerified: true},{where: {registrationConfirmationCode}});
+       const updated = await User.update(
+         { registrationConfirmationCode: null, accountVerified: true },
+         { where: { registrationConfirmationCode: code } }
+       );
       if(updated[0] > 0){
-        await Email_verification_code.create({ verificationCode: registrationConfirmationCode });
+        await Email_verification_code.create({ verificationCode: code });
         res.status(200).json({success: true,  message: 'Email verified successfully'})
       }else{
-        const verified = await Email_verification_code.findOne({where: { verificationCode: registrationConfirmationCode}})
+        const verified = await Email_verification_code.findOne({where: { verificationCode: code}})
         if(verified){
+          console.log('Email already verified')
           res.status(409).json({success: false, message: 'Email already verified' })
         }else{
            res.status(400).json({success: false, message: 'Invalid verification link' })
@@ -424,5 +427,46 @@ router.post("/verifyEmail", [
     }
 });
 
+
+//Resend verification Email
+router.post("/reSendVerificationEmail", async (req, res) =>{
+  try{
+    const { username, clientWebUrl, clientId } = req.body;
+    //Get user object so email address can be extracted to send email
+    const user = await User.findOne({ where: { username }, raw: true });
+    if (!user || (user.accountVerified && !user.registrationConfirmationCode)) {
+     return res.status(400).json({ success: false, message: "User not found or account already verified" });
+    }
+
+    // Garb Application name so the sender email address can be formed. ex donotreply@tombolo.com
+    const application = await Application.findOne({
+      where: { clientId},
+    });
+     if (!application) {
+        return res.status(400).json({ success: false, message: "Application not found" });
+     }
+
+    //If all checks passed and user is eligible to receive new verification link
+    const newVerificationCode = uuidv4();
+    const updated = await User.update({ registrationConfirmationCode: newVerificationCode }, { where: { username, accountVerified: false } });
+
+    if (updated.length > 0) {
+      // User updated - now send email
+      const url = `${clientWebUrl}verifyEmail/${newVerificationCode}`;
+      const sender = `donotreply@${application.applicationType.toLowerCase()}.com`;
+      const emailTitle = `${application.applicationType} - Verify your email address`;
+      // const emailBody = `<p>Hello ${user.firstName},</p><p> click <a href=${url} /> here </a> to verify your email </p>`;
+      const emailBody = emailVerificationTemplate({appName: application.applicationType, url})
+      const notification = await notify({ emailAddress: user.email, emailBody, sender, emailTitle });
+
+      if (notification.accepted) {
+        return res.status(200).json({ success: true, message: "New verification link sent successfully ", emailVerificationRequired: true });
+      }
+      throw new Error("Failed to send new verification E-mail");
+    }
+  }catch(err){
+    res.status(500).send({success: false, message : err.message})
+  }
+});
 
 module.exports = router;

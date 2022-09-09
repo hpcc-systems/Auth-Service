@@ -72,8 +72,20 @@ const notify = async ({emailAddress, emailTitle, emailBody, sender}) => {
   }
 };
 
+const emailVerificationTemplate = ({appName, url}) =>{
+  return `<html>
+    <p>Hello,</p>
+    <p> <a href=${url}>Click here </a> to confirm your email address and complete setting up your ${appName} account.</p>
+    <p>If clicking the link above did not work, please copy and paste the following link in your browser. If you did not create an account with ${appName}, you can safely delete this email.<p>
+    <p>${url} </p>
+    <p> - ${appName} </p>
+
+  </html>`;
+}
+
 module.exports = {
   sendPasswordResetLink,
-  notify
-}
+  notify,
+  emailVerificationTemplate,
+};
 
