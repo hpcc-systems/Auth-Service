@@ -12,16 +12,6 @@ module.exports = {
         },
         { transaction }
       );
-      await queryInterface.addColumn(
-        "application",
-        "registrationConfirmationRequired",
-        {
-          type: Sequelize.DataTypes.BOOLEAN,
-          default: false,
-          after: "owner",
-        },
-        { transaction }
-      );
 
       await transaction.commit();
     } catch (err) {
@@ -34,7 +24,6 @@ module.exports = {
     const transaction = await queryInterface.sequelize.transaction();
     try {
       await queryInterface.removeColumn('application', 'tokenTtl', { transaction });
-      await queryInterface.removeColumn("application", "registrationConfirmationRequired", { transaction });
       await transaction.commit();
     } catch (err) {
       await transaction.rollback();

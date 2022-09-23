@@ -23,7 +23,10 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: false,
       },
       applicationType: DataTypes.STRING,
-      clientId: DataTypes.STRING,
+      clientId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
     },
     { paranoid: true, freezeTableName: true }
   );
