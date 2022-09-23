@@ -7,10 +7,9 @@ import { authHeader } from '../common/AuthHeader.js';
 const Option = Select.Option;
 const { TextArea } = Input;
 
-function ApplicationDetailsDialog({ isShowing, onClose, selectedApplication, applications }) {
+function ApplicationDetailsDialog({ isShowing, onClose, selectedApplication, applications, notificationSettingsConfigured }) {
   const [form] = Form.useForm();
   const [selectedApplicationType, setSelectedApplicationType] = useState("");
-  const [isNotificationConfigured, setIsNotificationConfigured] = useState(false);
 
   //Use effect
   useEffect(() => {
@@ -18,26 +17,8 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplication, app
       form.setFieldsValue(selectedApplication);
       setSelectedApplicationType(selectedApplication.applicationType);
     }
-
-    checkIfNotificationSettingsConfigured();
-
     // eslint-disable-next-line
   }, [selectedApplication]);
-
-  //Check if notification is configured in backend
-  const checkIfNotificationSettingsConfigured = async () => {
-    try{
-      const rawResponse = await fetch("/api/notification/settings", { headers: authHeader(), method: "get" });
-      const response = await rawResponse.json();
-              console.log(response);
-
-      if (response.notificationSettingConfigured) {
-        setIsNotificationConfigured(true);
-      }
-    }catch(err){
-      console.log(err)
-    }
-  }
 
   //Close Modal -. When cancel or X clicked or when form submitted success
   const closeModal = () => {
@@ -125,9 +106,8 @@ function ApplicationDetailsDialog({ isShowing, onClose, selectedApplication, app
             <InputNumber name="tokenTtl" style={{ width: "100%" }} placeholder="Token TTL in minutes" />
           </Form.Item>
         </Form.Item>
-        
 
-        {selectedApplicationType === "HPCC" || selectedApplicationType === "" || !isNotificationConfigured ? null : (
+        {selectedApplicationType === "HPCC" || !selectedApplicationType || !notificationSettingsConfigured ? null : (
           <Form.Item
             name="registrationConfirmationRequired"
             wrapperCol={{
