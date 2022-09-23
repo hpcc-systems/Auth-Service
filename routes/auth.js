@@ -429,44 +429,68 @@ router.post("/verifyEmail", [
 
 
 //Resend verification Email
-router.post("/reSendVerificationEmail", async (req, res) =>{
-  try{
-    const { username, clientWebUrl, clientId } = req.body;
-    //Get user object so email address can be extracted to send email
-    const user = await User.findOne({ where: { username }, raw: true });
-    if (!user || (user.accountVerified && !user.registrationConfirmationCode)) {
-     return res.status(400).json({ success: false, message: "User not found or account already verified" });
+router.post(
+  "/reSendVerificationEmail",
+  [
+    body("username")
+      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/)
+      .withMessage("Invalid User Name"),
+    body("clientId")
+      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/)
+      .withMessage("Invalid Client Id"),
+    body("clientWebUrl")
+      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9\/\:_-]*$/)
+      .withMessage("Invalid Client web URL"),
+  ],
+  async (req, res) => {
+    //Check if errors in payload
+    const errors = validationResult(req).formatWith(errorFormatter);
+    if (!errors.isEmpty()) {
+      const {errors : validationErrors} = errors;
+      const errorString = validationErrors.map((err) => {
+        return err.msg;
+      }).join(',');
+      return res.status(422).json({ success: false, message: errorString});
     }
 
-    // Garb Application name so the sender email address can be formed. ex donotreply@tombolo.com
-    const application = await Application.findOne({
-      where: { clientId},
-    });
-     if (!application) {
-        return res.status(400).json({ success: false, message: "Application not found" });
-     }
-
-    //If all checks passed and user is eligible to receive new verification link
-    const newVerificationCode = uuidv4();
-    const updated = await User.update({ registrationConfirmationCode: newVerificationCode }, { where: { username, accountVerified: false } });
-
-    if (updated.length > 0) {
-      // User updated - now send email
-      const url = `${clientWebUrl}verifyEmail/${newVerificationCode}`;
-      const sender = `donotreply@${application.applicationType.toLowerCase()}.com`;
-      const emailTitle = `${application.applicationType} - Verify your email address`;
-      // const emailBody = `<p>Hello ${user.firstName},</p><p> click <a href=${url} /> here </a> to verify your email </p>`;
-      const emailBody = emailVerificationTemplate({appName: application.applicationType, url})
-      const notification = await notify({ emailAddress: user.email, emailBody, sender, emailTitle });
-
-      if (notification.accepted) {
-        return res.status(200).json({ success: true, message: "New verification link sent successfully ", emailVerificationRequired: true });
+    try {
+      const { username, clientWebUrl, clientId } = req.body;
+      //Get user object so email address can be extracted to send email
+      const user = await User.findOne({ where: { username }, raw: true });
+      if (!user || (user.accountVerified && !user.registrationConfirmationCode)) {
+        return res.status(400).json({ success: false, message: "User not found or account already verified" });
       }
-      throw new Error("Failed to send new verification E-mail");
+
+      // Garb Application name so the sender email address can be formed. ex donotreply@tombolo.com
+      const application = await Application.findOne({
+        where: { clientId },
+      });
+      if (!application) {
+        return res.status(400).json({ success: false, message: "Application not found" });
+      }
+
+      //If all checks passed and user is eligible to receive new verification link
+      const newVerificationCode = uuidv4();
+      const updated = await User.update({ registrationConfirmationCode: newVerificationCode }, { where: { username, accountVerified: false } });
+
+      if (updated[0] > 0) {
+        // User updated - now send email
+        const url = `${clientWebUrl}verifyEmail/${newVerificationCode}`;
+        const sender = `donotreply@${application.applicationType.toLowerCase()}.com`;
+        const emailTitle = `${application.applicationType} - Verify your email address`;
+        // const emailBody = `<p>Hello ${user.firstName},</p><p> click <a href=${url} /> here </a> to verify your email </p>`;
+        const emailBody = emailVerificationTemplate({ appName: application.applicationType, url });
+        const notification = await notify({ emailAddress: user.email, emailBody, sender, emailTitle });
+
+        if (notification.accepted) {
+          return res.status(200).json({ success: true, message: "New verification link sent successfully ", emailVerificationRequired: true });
+        }
+        throw new Error("Failed to send new verification E-mail");
+      }
+    } catch (err) {
+      res.status(500).send({ success: false, message: err.message });
     }
-  }catch(err){
-    res.status(500).send({success: false, message : err.message})
   }
-});
+);
 
 module.exports = router;
