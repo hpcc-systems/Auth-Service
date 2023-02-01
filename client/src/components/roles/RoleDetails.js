@@ -240,13 +240,13 @@ function RoleDetails() {
 													                  <Form.Item {...field}>
 													                    <Input placeholder="" name={permissionType.key}  style={{ width: '180px' }} />
 													                  </Form.Item>  
-													                    <MinusCircleOutlined
+													                    {/* <MinusCircleOutlined
 													                      className="dynamic-delete-button"
 													                      style={{ margin: '0 8px' }}
 													                      onClick={() => {
 													                        remove(field.name);
-													                      }}
-													                    />
+													                      }} */}
+													                    {/* /> */}
 													                  </span>
 												                  
 												                </Form.Item>
