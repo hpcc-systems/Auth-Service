@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const rateLimit = require('express-rate-limit');
 
 const withAuth = require('./middleware');
 const loginRouter = require('./routes/login');
@@ -16,6 +17,7 @@ const notificationRouter = require('./routes/notification')
 const { userAccountCleanUp } = require("./jobSchedular");
 
 var app = express();
+app.set("trust proxy", 1); // if the app is behind cdn or load balancer, rate limiter will fail without this 
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -26,6 +28,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Setting up limiter 
+var limiter = rateLimit({
+  windowMs: 1*60*1000, // 1 minute
+  max: 60
+});
+
+// apply rate limiter to all requests
+app.use(limiter);
 
 app.use('/login', loginRouter);
 app.use('/api/users', withAuth, usersRouter);

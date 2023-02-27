@@ -150,14 +150,14 @@ router.post('/verify', function(req, res, next) {
         res.status(200).send({ verified: verified })
       }).catch(err => {
         console.log('err', err);
-        res.status(500).send('Error -> ' + err);
+        res.status(500).send({ message: "failed to verify" });
       })
     } else {
       res.status(200).send({ verified: verified })
     }
   } catch(err) {
     console.log('err', err);
-    res.status(500).send('Error -> ' + err);
+    res.status(500).send({message: "failed to verify"});
   }
 });
 
