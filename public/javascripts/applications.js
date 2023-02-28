@@ -478,16 +478,13 @@ $(document).ready(() => {
 
   let addPermissionType = (evt) => {
     let uniquePermissions=[];
-    const barrerdChars = ["<", ">", "/"];
+    const acceptedRegex = /[^a-zA-Z1-9\s]/g;
 
     evt.preventDefault();
     evt.stopPropagation();
     if($(evt.target).parent().siblings().find('input').val() != '') {
       const permissionType = $(evt.target).parent().siblings().find("input").val();
-      const permissionTypeArr = permissionType.split("");
-      const filterdPermissionTypeArr = permissionTypeArr.filter((char) => !barrerdChars.includes(char)); // Strip off any char that could be used for js injectio
-      const newPermissionType = filterdPermissionTypeArr.join("");
-
+      const newPermissionType = permissionType.replace(acceptedRegex, ""); // accept only alphabets, numbers and space. Removes anything else
       uniquePermissions.push(newPermissionType);
       $('.select-permissions').append('<div class="available-permissions"><input type="checkbox" class="form-check-input" value="'+newPermissionType+'" />'+
             '<label class="form-check-label">'+newPermissionType+'</label></div>');
