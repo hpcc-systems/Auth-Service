@@ -16,7 +16,6 @@ const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
 
 let hashPassword = (password) => {
   let salt = password.substring(0,2);
-  console.log(salt); 
   return crypto.createHash("sha256").update(salt+password).digest('base64');
 }
 
