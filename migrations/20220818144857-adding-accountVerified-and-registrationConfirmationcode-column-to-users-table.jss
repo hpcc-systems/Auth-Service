@@ -3,7 +3,7 @@ module.exports = {
     const transaction = await queryInterface.sequelize.transaction();
     try {
       await queryInterface.addColumn(
-        "users",
+        "Users",
         "accountVerified",
         {
           type: Sequelize.DataTypes.BOOLEAN,
@@ -33,8 +33,8 @@ module.exports = {
   async down(queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
     try {
-      await queryInterface.removeColumn("users", "accountVerified", { transaction });
-      await queryInterface.removeColumn("users", "registrationConfirmationCode", { transaction });
+      await queryInterface.removeColumn("Users", "accountVerified", { transaction });
+      await queryInterface.removeColumn("Users", "registrationConfirmationCode", { transaction });
       await transaction.commit();
     } catch (err) {
       await transaction.rollback();
