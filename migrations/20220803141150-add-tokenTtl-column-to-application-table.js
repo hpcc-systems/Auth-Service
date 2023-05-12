@@ -3,7 +3,7 @@ module.exports = {
     const transaction = await queryInterface.sequelize.transaction();
     try {
       await queryInterface.addColumn(
-        'application',
+        'Application',
         'tokenTtl',
         {
           type: Sequelize.DataTypes.SMALLINT,
@@ -23,7 +23,7 @@ module.exports = {
   async down(queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
     try {
-      await queryInterface.removeColumn('application', 'tokenTtl', { transaction });
+      await queryInterface.removeColumn('Application', 'tokenTtl', { transaction });
       await transaction.commit();
     } catch (err) {
       await transaction.rollback();
