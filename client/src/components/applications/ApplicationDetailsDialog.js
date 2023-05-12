@@ -1,200 +1,160 @@
-import React, { useState, useEffect } from 'react'
-import { Form, Input, Button, Select, Tooltip, Modal, message, Alert } from 'antd';
-import { SearchOutlined, PlusOutlined, MinusCircleOutlined  } from '@ant-design/icons';
-import { Breadcrumb } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Modal, Form, Input, Select, InputNumber, message, Checkbox } from 'antd';
+
 import { Constants } from '../common/Constants';
-import { authHeader, handleErrors } from "../common/AuthHeader.js"
+import { authHeader } from '../common/AuthHeader.js';
+
 const Option = Select.Option;
 const { TextArea } = Input;
 
+function ApplicationDetailsDialog({ isShowing, onClose, selectedApplication, applications, notificationSettingsConfigured }) {
+  const [form] = Form.useForm();
+  const [selectedApplicationType, setSelectedApplicationType] = useState("");
 
-const layout = {
-  labelCol: { span: 4 },
-  wrapperCol: { span: 12 },
-};
-
-function ApplicationDetailsDialog({ isShowing, onClose, selectedApplicationId, applications }) {
-	const [applicationDetails, setApplicationDetails] = useState({
-    id: '',
-    name: '',
-    applicationType: '',
-    clientId: '',
-    owner: '',
-    email: '',
-    description: ''
-  });	
-	const [form] = Form.useForm();	  
-
-  useEffect(() => {       
-    resetForm();
-    if(selectedApplicationId != '') {
-      fetchApplicationDetails();    
+  //Use effect
+  useEffect(() => {
+    if (selectedApplication) {
+      form.setFieldsValue(selectedApplication);
+      setSelectedApplicationType(selectedApplication.applicationType);
     }
-  }, [selectedApplicationId])
+    // eslint-disable-next-line
+  }, [selectedApplication]);
 
-  const handleOk = () => {
-    if(applications.filter(application => application.clientId == applicationDetails.clientId).length > 0) {
-      message.error("There is already an Application with the same Client Id, please use a different Client Id for "+applicationDetails.name);
+  //Close Modal -. When cancel or X clicked or when form submitted success
+  const closeModal = () => {
+    form.resetFields();
+    onClose();
+  };
+
+  //Save job Function
+  const saveApplication = async () => {
+    await form.validateFields();
+
+    if (applications.map((application) => application.name).includes(form.getFieldValue("name")) && !selectedApplication) {
+      message.error("Please pick a unique application name");
       return;
     }
 
-    fetch('/api/application', {
-      method: applicationDetails.id == '' ? 'post' : 'put',
-      headers: authHeader(),
-      body: JSON.stringify(applicationDetails)
-    })
-    .then(handleErrors)
-    .then(function(response) {
-      message.success("Application has been saved successfully")
-      onClose();
-      resetForm();
-    }).catch(function(error) {
-      console.log(error);
-      message.error("There was an error saving the Application: "+error);      
-    });
-  }  
+    // Payload
+    const applicationDetails = form.getFieldsValue();
+    if (selectedApplication) applicationDetails.id = selectedApplication.id;
 
-  const fetchApplicationDetails = () => {
-    fetch('/api/application?id='+selectedApplicationId, {
-      method: 'get',
-      headers: authHeader(),
-    })
-    .then(handleErrors)
-    .then(function(applicationData) {
-      setApplicationDetails({
-        id: applicationData.id,
-        name: applicationData.applicationType,
-        applicationType: applicationData.applicationType,
-        clientId: applicationData.clientId,
-        owner: applicationData.owner,
-        email: applicationData.email,
-        description: applicationData.description
+    try {
+      const response = await fetch("/api/application", {
+        method: selectedApplication ? "put" : "post", // put if editing
+        headers: authHeader(),
+        body: JSON.stringify(applicationDetails),
       });
-      form.setFieldsValue({
-        id: applicationData.id,
-        name: applicationData.applicationType,
-        applicationType: applicationData.applicationType,
-        clientId: applicationData.clientId,
-        owner: applicationData.owner,
-        email: applicationData.email,
-        description: applicationData.description
-      });
-    });
 
-  }  
+      if (!response.ok) throw new Error("Unable to save application");
+      message.success("Application saved");
+      closeModal();
+    } catch (err) {
+      message.error(err.message);
+    }
+  };
 
-  const resetForm = () => {
-    form.resetFields(); 
-    resetState();
-  }
-
-  const resetState = () => {
-    setApplicationDetails({
-      id: '',
-      name: '',
-      applicationType: '',
-      clientId: '',
-      owner: '',
-      email: '',
-      description: ''
-    });    
-  }
-
-  const onChange = (e) => {
-    setApplicationDetails({...applicationDetails, [e.target.name]: e.target.value})
-  }
-
-  const onApplicationTypeChange = (value) => {
-    setApplicationDetails({...applicationDetails, ['applicationType']: value})
-  }
-
-
+  //JSX
   return (
-  	<React.Fragment>
-	  	<Modal
-          title="Application Details"
-          visible={isShowing}
-          onCancel={onClose}
-          width={800}
-          onOk={() => {
-            form
-              .validateFields()
-              .then(values => {                
-                handleOk();
-              })
-              .catch(info => {
-                console.log('Validate Failed:', info);
-              });
-          }}
+    <Modal visible={isShowing} onCancel={closeModal} onOk={saveApplication} width={700} maskClosable={false}>
+      <Form layout="vertical" name="basic" form={form}>
+        <Form.Item
+          label="Name"
+          name="name"
+          rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/), message: "Please enter a valid name!." }]}
+          style={{ marginBottom: "5px" }}
         >
-          <Form
-            {...layout}
-            name="basic"       
-            form={form}     
-            initialValues={{ remember: true }}
+          <Input name="name" placeholder="Name" />
+        </Form.Item>
+
+        <Form.Item
+          label="Application Type"
+          name="applicationType"
+          rules={[{ required: true, message: "Please enter application type!" }]}
+          style={{ marginBottom: "5px" }}
+        >
+          <Select placeholder="Application Type" onChange={(value) => setSelectedApplicationType(value)}>
+            {Constants.APPLICATION_TYPES.map((applicationType) => (
+              <Option key={applicationType}>{applicationType}</Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        <Form.Item style={{ marginBottom: "-10px" }}>
+          <Form.Item
+            label="Client Id"
+            name="clientId"
+            rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/), message: "Please enter a valid client id!" }]}
+            style={{ display: "inline-block", width: "calc(60% - 8px)" }}
           >
-            <Form.Item
-              label="Name"
-              name="name"
-              rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/), message: 'Please enter a valid name!.' }]}
-            >
-              <Input id="name" name="name" placeholder="Name" onChange={onChange}  value={applicationDetails.name}/>
-            </Form.Item>
-            
-            <Form.Item
-              label="Application Type"
-              name="applicationType"
-              required
-              rules={[{ required: true, message: 'Please enter application type!' }]}
-            >
-              <Select id="applicationType" placeholder="Application Type" style={{ width: 190 }} onChange={onApplicationTypeChange} value={applicationDetails.applicationType}>
-                {Constants.APPLICATION_TYPES.map(applicationType => <Option key={applicationType}>{applicationType}</Option>)}
-              </Select>
-            </Form.Item>
-            <Form.Item
-              label="Client Id"
-              name="clientId"
-              required
-              rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/), message: 'Please enter a valid client id!' }]}
-            >
-              <Input id="clientId" name="clientId" onChange={onChange} placeholder="Client Id" value={applicationDetails.clientId}/>
-            </Form.Item>
-            <Form.Item
-              label="Owner"
-              name="owner"
-              required
-              rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/), message: 'Please enter a valid owner!' }]}
-            >
-              <Input id="owner" name="owner" onChange={onChange} placeholder="Owner" value={applicationDetails.owner}/>
-            </Form.Item>
-            <Form.Item
-              label="Email"
-              name="email"
-              required
-              rules={[
+            <Input name="clientId" placeholder="Client ID" />
+          </Form.Item>
+
+          <Form.Item
+            label="Token TTL (Min : 300, Max :1440 )"
+            name="tokenTtl"
+            rules={[
               {
-                type: 'email',
-                message: 'The input is not valid E-mail!',
-              },
-              {
-                required: true,
-                message: 'Please input E-mail!'
+                type: "number",
+                min: 300,
+                max: 3600,
+                message: "Token TTL must be between 300 and 3600",
               },
             ]}
-            >
-              <Input id="email" name="email" onChange={onChange} placeholder="Email" value={applicationDetails.email}/>
-            </Form.Item>
-            <Form.Item
-              label="Description"
-              name="description"
+            style={{ display: "inline-block", width: "calc(40% - 8px)", marginLeft: "16px" }}
+          >
+            <InputNumber name="tokenTtl" style={{ width: "100%" }} placeholder="Token TTL in minutes" />
+          </Form.Item>
+        </Form.Item>
 
-            >
-              <TextArea rows={4} style={{"width": "400px"}} id="description" name="description" onChange={onChange} value={applicationDetails.description}/>
-            </Form.Item>
-        </Form>
-        </Modal>
-	  </React.Fragment>  
+        {selectedApplicationType === "HPCC" || !selectedApplicationType || !notificationSettingsConfigured ? null : (
+          <Form.Item
+            name="registrationConfirmationRequired"
+            wrapperCol={{
+              offset: 0,
+              span: 16,
+            }}
+            valuePropName="checked"
+            style={{ marginBottom: "5px" }}
+          >
+            <Checkbox>Send registration confirmation</Checkbox>
+          </Form.Item>
+        )}
+
+        <Form.Item
+          label="Owner"
+          name="owner"
+          rules={[{ required: true, pattern: new RegExp(/^[a-zA-Z]{1}[a-zA-Z0-9 _-]*$/), message: "Please enter a valid owner!" }]}
+          style={{ marginBottom: "5px" }}
+        >
+          <Input name="owner" placeholder="Owner" />
+        </Form.Item>
+
+        <Form.Item
+          label="Email"
+          name="email"
+          required
+          rules={[
+            {
+              type: "email",
+              message: "The input is not valid E-mail!",
+            },
+            {
+              required: true,
+              message: "Please input E-mail!",
+            },
+          ]}
+          style={{ marginBottom: "5px" }}
+        >
+          <Input name="email" placeholder="E-mail" />
+        </Form.Item>
+
+        <Form.Item label="Description" name="description" style={{ marginBottom: "5px" }}>
+          <TextArea rows={2} autoSize={{ minRows: 2 }} />
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 }
 
-export default ApplicationDetailsDialog
+export default ApplicationDetailsDialog;

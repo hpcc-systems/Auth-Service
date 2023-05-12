@@ -24,45 +24,41 @@ const signOptions = {
 };
 
 let payload = {
-  //iss:'hpcc_systems_issuer',  
   aud:'hpcc_systems_platform'  
 }
 
-let validateUser = (username, password, nonce) => {  
+
+let validateUser = (username, password, nonce) => {
   return new Promise((resolve, reject) => {
-    if(!username) {
-      reject("Username required!")
+    if (!username) {
+      reject("Username required!");
     }
-    if(!password) {
-      reject("Password required!")
+    if (!password) {
+      reject("Password required!");
     }
     User.findOne({
       where: {
-        username: username
-      }
-    }).then(user => {
+        username: username,
+      },
+    }).then((user) => {
       if (!user) {
-        //throw new Error('User Not Found.');
-        reject("Invalid User!")
-      }
-      let passwordBase64DecodedBuff = Buffer.from(user.password, 'base64');  
-      let nonceBuff = Buffer.from(nonce);
-      let passwordNonce = Buffer.concat([passwordBase64DecodedBuff, nonceBuff]);
-      let concatenatedHash = crypto.createHash("sha256").update(passwordNonce).digest('base64')
-      //var passwordIsValid = bcrypt.compareSync(password, user.password);
-      var passwordIsValid = (password == concatenatedHash);
-      if (!passwordIsValid) {
-        //return res.status(401).send({ auth: false, accessToken: null, reason: "Invalid Password!" });
-        //throw new Error("Invalid Password!")
-        let isBcryptPasswordValid = bcrypt.compareSync(password, user.password);
-        if(!isBcryptPasswordValid) {
-          reject("Invalid Password!")  
-        }        
-      }
-      resolve(user);    
-    })   
-  })
-}
+        reject("Invalid User!");
+      }else{
+        let passwordBase64DecodedBuff = Buffer.from(user.password, "base64");
+        let nonceBuff = Buffer.from(nonce);
+        let passwordNonce = Buffer.concat([passwordBase64DecodedBuff, nonceBuff]);
+        let concatenatedHash = crypto.createHash("sha256").update(passwordNonce).digest("base64");
+        var passwordIsValid = password == concatenatedHash;
+        if (!passwordIsValid) {
+          reject("Invalid Password!");
+        }
+        resolve(user);
+      }  
+    });
+  });
+};
+
+
 
 let populatePermissions = (roles) => {
   let permissions_roles = {};
@@ -117,33 +113,34 @@ let getPermissions = (user, clientId) => {
 
 }
 
+
 router.post('/login', [  
   body('username')
     .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_-]*$/).withMessage('Invalid User Name'),
   body('password').isLength({ min: 4 }),  
-  body('client_id').exists(),
   body('client_id').not().isEmpty()
 ], async (req, res) => {  
   const errors = validationResult(req).formatWith(errorFormatter);
+  console.log(errors)
   if (!errors.isEmpty()) {
     return res.status(422).json({ error: "Invalid input" });
   }
-  console.log('URL: '+req.protocol + '://' + req.get('host') + req.originalUrl);
 
   try {
     let user = await validateUser(req.body.username, req.body.password, req.body.nonce);
+    let application = await Application.findOne({where: { clientId: req.body.client_id}, raw: true})
+    
     // PRIVATE  	
     let refreshToken = bcrypt.genSaltSync(10);  
     payload.iss = process.env["HOST_PORT"] + req.originalUrl;
     payload.aud = req.body.client_id;
     payload.sub = user.username;
     payload.iat = Math.floor(Date.now() / 1000);
-    payload.exp = Math.floor(Date.now() / 1000) + (86400);//24h
-    //payload.exp = '24h'
+    payload.exp = Math.floor(Date.now() / 1000) + (application.tokenTtl || 3600);// 1 hr
     payload.nonce = req.body.nonce;
 
     let permissions = await getPermissions(user, req.body.client_id);
-    console.log(permissions)
+
     let fullPayload = {
       ...payload,
       ...permissions
@@ -191,6 +188,8 @@ router.post('/tokenrefresh', [
         },
         include:[{model: models.Role }]
       }).then(async user => {
+
+        let application = await Application.findOne({where: { clientId: req.body.client_id}, raw: true})
         let newRefreshToken = bcrypt.genSaltSync(10);  
         let username = user.username;
         //payload.refresh_token = newRefreshToken;
@@ -198,7 +197,7 @@ router.post('/tokenrefresh', [
         payload.aud = req.body.client_id;
         payload.sub = user.username;
         payload.iat = Math.floor(Date.now() / 1000);
-        payload.exp = Math.floor(Date.now() / 1000) + (86400);    
+        payload.exp = Math.floor(Date.now() / 1000) + (application.tokenTtl || 3600);  // 1 hour or what ever is configured
         //payload.exp = '24h';
         //payload.nonce = req.body.nonce;
         let permissions = await getPermissions(user, req.body.client_id);
