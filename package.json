@@ -25,7 +25,7 @@
     "http-errors": "~1.6.3",
     "jsonwebtoken": "^9.0.0",
     "morgan": "~1.9.1",
-    "mysql2": "^3.9.7",
+    "mysql2": "^3.9.8",
     "node-schedule": "^2.1.0",
     "nodemailer": "^6.9.9",
     "semver": "^7.5.2",
