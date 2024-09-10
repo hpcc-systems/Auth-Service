@@ -19,7 +19,7 @@
     "debug": "~2.6.9",
     "dotenv": "^8.2.0",
     "ejs": "^3.1.10",
-    "express": "~4.19.2",
+    "express": "~4.20.0",
     "express-rate-limit": "^6.7.0",
     "express-validator": "^6.6.1",
     "http-errors": "~1.6.3",
