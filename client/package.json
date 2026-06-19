@@ -7,7 +7,7 @@
     "@types/jwt-decode": "^2.2.1",
     "antd": "^4.6.6",
     "array-move": "^3.0.1",
-    "http-proxy-middleware": "^3.0.5",
+    "http-proxy-middleware": "^3.0.7",
     "jwt-decode": "^3.0.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
